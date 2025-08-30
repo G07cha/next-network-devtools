@@ -1,0 +1,19 @@
+{
+	"name": "api-server",
+	"version": "1.0.0",
+	"description": "Comprehensive HTTP API mock server for flexible response simulation",
+	"main": "src/index.mts",
+	"scripts": {
+		"dev": "node --watch src/index.mts",
+		"start": "node src/index.mts",
+		"check": "tsc --noEmit"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"private": true,
+	"devDependencies": {
+		"@types/node": "^24.3.0",
+		"typescript": "^5.9.2"
+	}
+}
