@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+@theme {
+	/* Abstract colors */
+	--color-primary: #000000;
+	--color-primary-inverted: #ffffff;
+	--color-secondary: #666666;
+	--color-tertiary: #9ca3af;
+
+	--color-success-text: var(--color-primary-inverted);
+	--color-success-bg: #54bc4a;
+	--color-info-text: var(--color-primary-inverted);
+	--color-info-bg: #646cff;
+	--color-warning-text: var(--color-primary-inverted);
+	--color-warning-bg: #f1c40f;
+	--color-error-text: var(--color-primary-inverted);
+	--color-error-bg: #e74c3c;
+
+	/* Component colors */
+
+	/* 
+   * Next Network Design System
+   * Three-tier semantic color system organized by context and hierarchy
+   */
+
+	/* ===== TEXT COLORS ===== */
+
+	/* Primary Text - Main content, headers, important elements */
+	--color-text-primary: #ffffff;
+	--color-text-primary-hover: #f8f9fa;
+
+	/* Secondary Text - Supporting content, labels, descriptions */
+	--color-text-secondary: #d1d5db; /* gray-300 */
+	--color-text-secondary-hover: #e5e7eb;
+
+	/* Tertiary Text - Subtle content, placeholders, disabled states */
+	--color-text-tertiary: #9ca3af; /* gray-400 */
+	--color-text-tertiary-hover: #6b7280;
+
+	/* ===== CONTAINER COLORS ===== */
+
+	/* Primary Containers - Main panels, cards, primary backgrounds */
+	--color-container-primary: #242424; /* dark */
+	--color-container-primary-hover: #2d2d2d;
+
+	/* Secondary Containers - Secondary panels, nested containers */
+	--color-container-secondary: #222222; /* panel */
+	--color-container-secondary-hover: #2a2a2a;
+
+	/* Tertiary Containers - Subtle backgrounds, overlays, code blocks */
+	--color-container-tertiary: #181818; /* code */
+	--color-container-tertiary-hover: #1f1f1f;
+
+	/* ===== BORDER COLORS ===== */
+
+	/* Primary Borders - Main borders, dividers, strong emphasis */
+	--color-border-primary: #4b5563; /* gray-600 */
+	--color-border-primary-hover: #6b7280;
+
+	/* Secondary Borders - Supporting borders, separators */
+	--color-border-secondary: #374151; /* gray-700 */
+	--color-border-secondary-hover: #4b5563;
+
+	/* Tertiary Borders - Subtle borders, light separators */
+	--color-border-tertiary: #1f2937; /* gray-800 */
+	--color-border-tertiary-hover: #374151;
+
+	/* ===== STATUS COLORS ===== */
+
+	/* Success Colors */
+	--color-success: #54bc4a;
+	--color-success-light: #68cc5c;
+	--color-success-bg: rgb(84 188 74 / 0.1);
+	--color-success-bg-hover: rgb(84 188 74 / 0.2);
+	--color-success-border: rgb(84 188 74 / 0.3);
+
+	/* Info Colors */
+	--color-info: #646cff;
+	--color-info-light: #7c84ff;
+	--color-info-bg: rgb(100 108 255 / 0.1);
+	--color-info-bg-hover: rgb(100 108 255 / 0.2);
+	--color-info-border: rgb(100 108 255 / 0.3);
+
+	/* Warning Colors */
+	--color-warning: #f1c40f;
+	--color-warning-light: #f4d03f;
+	--color-warning-bg: rgb(241 196 15 / 0.1);
+	--color-warning-bg-hover: rgb(241 196 15 / 0.2);
+	--color-warning-border: rgb(241 196 15 / 0.3);
+
+	/* Error Colors */
+	--color-error: #e74c3c;
+	--color-error-light: #ec7063;
+	--color-error-bg: rgb(231 76 60 / 0.1);
+	--color-error-bg-hover: rgb(231 76 60 / 0.2);
+	--color-error-border: rgb(231 76 60 / 0.3);
+
+	/* Neutral Colors */
+	--color-neutral: #9ca3af;
+	--color-neutral-light: #cbd5e1;
+	--color-neutral-bg: rgb(156 163 175 / 0.1);
+	--color-neutral-bg-hover: rgb(156 163 175 / 0.2);
+	--color-neutral-border: rgb(156 163 175 / 0.3);
+
+	/* ===== INTERACTIVE COLORS ===== */
+
+	/* Button Colors */
+	--color-button-primary: #1a1a1a;
+	--color-button-primary-hover: #2d2d2d;
+	--color-button-secondary: #374151;
+	--color-button-secondary-hover: #4b5563;
+
+	/* Surface Colors for different hierarchy levels */
+	--color-surface-elevated: #2d2d2d;
+	--color-surface-elevated-hover: #3a3a3a;
+
+	/* ===== UTILITY OVERRIDES ===== */
+
+	/* Override existing custom colors to use semantic tokens */
+	--color-primary: var(--color-success);
+	--color-blue: var(--color-info);
+	--color-dark: var(--color-container-primary);
+	--color-panel: var(--color-container-secondary);
+	--color-code: var(--color-container-tertiary);
+	--color-button: var(--color-button-primary);
+}
+
+/* Custom utility classes for semantic color usage */
+@layer utilities {
+	/* Container Background Utilities */
+	.bg-primary-container {
+		background-color: var(--color-neutral-bg);
+	}
+	.bg-secondary-container {
+		background-color: var(--color-container-secondary);
+	}
+	.bg-tertiary-container {
+		background-color: var(--color-container-tertiary);
+	}
+
+	/* Border Utilities */
+	.border-primary-border {
+		border-color: var(--color-border-primary);
+	}
+	.border-secondary-border {
+		border-color: var(--color-border-secondary);
+	}
+	.border-tertiary-border {
+		border-color: var(--color-border-tertiary);
+	}
+
+	.border-success {
+		border-color: var(--color-success-border);
+	}
+	.border-info {
+		border-color: var(--color-info-border);
+	}
+	.border-warning {
+		border-color: var(--color-warning-border);
+	}
+	.border-error {
+		border-color: var(--color-error-border);
+	}
+	.border-neutral {
+		border-color: var(--color-neutral-border);
+	}
+
+	/* Interactive States */
+	.bg-button-primary {
+		background-color: var(--color-button-primary);
+	}
+	.bg-button-secondary {
+		background-color: var(--color-button-secondary);
+	}
+
+	.hover\:bg-button-primary:hover {
+		background-color: var(--color-button-primary-hover);
+	}
+	.hover\:bg-button-secondary:hover {
+		background-color: var(--color-button-secondary-hover);
+	}
+
+	/* Surface Utilities */
+	.bg-surface-elevated {
+		background-color: var(--color-surface-elevated);
+	}
+	.hover\:bg-surface-elevated:hover {
+		background-color: var(--color-surface-elevated-hover);
+	}
+}
+
+@layer base {
+	html,
+	body {
+		height: 100vh;
+		margin: 0;
+		padding: 0;
+	}
+
+	#root {
+		height: 100%;
+	}
+}

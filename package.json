@@ -1,0 +1,18 @@
+{
+	"name": "next-network",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"linter:fix": "pnpm exec biome check --write",
+		"linter:check": "pnpm exec biome check"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"packageManager": "pnpm@10.14.0",
+	"devDependencies": {
+		"@biomejs/biome": "2.1.4"
+	},
+	"dependencies": {}
+}
