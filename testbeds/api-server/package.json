@@ -8,9 +8,6 @@
 		"start": "node src/index.mts",
 		"check": "tsc --noEmit"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
 	"private": true,
 	"devDependencies": {
 		"@types/node": "^24.3.0",
