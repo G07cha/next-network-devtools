@@ -1,5 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	Fragment,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import type { RequestSpan, ResponseSpan } from "@/packages/types";
+import { CodeBlock } from "./code-block";
 
 export interface SidePanelProps {
 	requestData?: RequestSpan;
@@ -18,7 +27,11 @@ interface CopyButtonProps {
 	className?: string;
 }
 
-function CopyButton({ content, label, className = "" }: CopyButtonProps) {
+export function CopyButton({
+	content,
+	label,
+	className = "",
+}: CopyButtonProps) {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = async () => {
@@ -35,14 +48,45 @@ function CopyButton({ content, label, className = "" }: CopyButtonProps) {
 		<button
 			type="button"
 			onClick={handleCopy}
-			className={`px-2 py-1 text-xs bg-button hover:bg-gray-600 rounded transition-colors ${className}`}
+			className={`px-2 py-1 text-xs hover:bg-gray-600 rounded transition-colors ${className}`}
 			title={`Copy ${label}`}
 			disabled={!content}
 		>
-			{copied ? "Copied!" : "Copy"}
+			{copied ? "☑️" : "📋"}
 		</button>
 	);
 }
+
+type PropertyListEntry = {
+	label: string;
+	value: ReactNode;
+	valueContainerClassName?: string;
+};
+
+const PropertyList = ({
+	data,
+	className,
+}: {
+	data: readonly PropertyListEntry[];
+	className?: string;
+}) => {
+	return (
+		<div
+			className={cn("gap-2 text-sm grid grid-cols-2 text-gray-400", className)}
+		>
+			{data.map(({ label, value, valueContainerClassName }) => (
+				<Fragment key={label}>
+					<span>{label}</span>
+					<span
+						className={cn("font-mono text-primary", valueContainerClassName)}
+					>
+						{value}
+					</span>
+				</Fragment>
+			))}
+		</div>
+	);
+};
 
 interface CollapsibleSectionProps {
 	title: string;
@@ -64,7 +108,7 @@ function CollapsibleSection({
 			<button
 				type="button"
 				onClick={() => setExpanded(!expanded)}
-				className="flex items-center justify-between w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+				className="flex items-center justify-between w-full p-3 rounded-lg transition-colors"
 				aria-expanded={expanded}
 			>
 				<div className="flex items-center gap-2">
@@ -80,7 +124,7 @@ function CollapsibleSection({
 				</div>
 			</button>
 			{expanded && (
-				<div className="mt-2 p-3 bg-panel rounded-lg border border-gray-700">
+				<div className="mt-2 p-3 rounded-lg border border-gray-700">
 					{children}
 				</div>
 			)}
@@ -88,42 +132,10 @@ function CollapsibleSection({
 	);
 }
 
-interface CodeBlockProps {
+export interface CodeBlockProps {
 	content: string;
 	language?: string;
 	maxHeight?: string;
-}
-
-function CodeBlock({
-	content,
-	language = "json",
-	maxHeight = "300px",
-}: CodeBlockProps) {
-	const formattedContent = useMemo(() => {
-		if (!content) return "";
-		try {
-			if (language === "json") {
-				return JSON.stringify(JSON.parse(content), null, 2);
-			}
-			return content;
-		} catch {
-			return content;
-		}
-	}, [content, language]);
-
-	return (
-		<div className="relative">
-			<div className="absolute top-2 right-2 z-10">
-				<CopyButton content={formattedContent} label="code content" />
-			</div>
-			<pre
-				className="bg-code p-4 rounded-lg text-sm font-mono overflow-auto text-gray-300 border border-gray-600"
-				style={{ maxHeight }}
-			>
-				{formattedContent}
-			</pre>
-		</div>
-	);
 }
 
 interface HeadersDisplayProps {
@@ -143,22 +155,13 @@ function HeadersDisplay({ headers, title }: HeadersDisplayProps) {
 	}
 
 	return (
-		<div className="space-y-2">
-			{headerEntries.map(([key, value]) => (
-				<div
-					key={key}
-					className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-gray-800 rounded border border-gray-600"
-				>
-					<div className="font-medium text-blue text-sm flex-shrink-0 sm:w-48">
-						{key}:
-					</div>
-					<div className="text-gray-300 text-sm font-mono break-all flex-1">
-						{value}
-					</div>
-					<CopyButton content={value} label={key} className="self-start" />
-				</div>
-			))}
-		</div>
+		<PropertyList
+			data={headerEntries.map(([key, value]) => ({
+				label: key,
+				value,
+				valueContainerClassName: "break-all",
+			}))}
+		/>
 	);
 }
 
@@ -208,7 +211,7 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 	return (
 		<div className="space-y-4">
 			{/* Method and URL */}
-			<div className="bg-panel p-4 rounded-lg border border-gray-600">
+			<div className="p-4 rounded-lg border border-gray-600">
 				<div className="flex items-center gap-3 mb-3">
 					<span
 						className={`px-3 py-1 rounded font-medium text-sm ${getMethodColor(requestData.method)}`}
@@ -219,7 +222,7 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 						{new Date(requestData.start).toLocaleString()}
 					</span>
 				</div>
-				<div className="font-mono text-sm text-gray-300 break-all">
+				<div className="font-mono text-sm text-primary break-all">
 					{requestData.url}
 				</div>
 			</div>
@@ -251,32 +254,34 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 
 			{/* Metadata */}
 			<CollapsibleSection title="Metadata" defaultExpanded={false}>
-				<div className="space-y-2 text-sm">
-					<div className="flex justify-between">
-						<span className="text-gray-400">Span ID:</span>
-						<span className="font-mono text-gray-300">
-							{requestData.spanId}
-						</span>
-					</div>
-					<div className="flex justify-between">
-						<span className="text-gray-400">Trace ID:</span>
-						<span className="font-mono text-gray-300">
-							{requestData.traceId}
-						</span>
-					</div>
-					<div className="flex justify-between">
-						<span className="text-gray-400">Request ID:</span>
-						<span className="font-mono text-gray-300">{requestData.id}</span>
-					</div>
-					{requestData.parentSpan && (
-						<div className="flex justify-between">
-							<span className="text-gray-400">Parent Span:</span>
-							<span className="font-mono text-gray-300">
-								{requestData.parentSpan.spanId}
-							</span>
-						</div>
-					)}
-				</div>
+				<PropertyList
+					data={[
+						{
+							label: "Span ID:",
+							value: requestData.spanId,
+							valueContainerClassName: "break-all",
+						},
+						{
+							label: "Trace ID:",
+							value: requestData.traceId,
+							valueContainerClassName: "break-all",
+						},
+						{
+							label: "Request ID:",
+							value: requestData.id,
+							valueContainerClassName: "break-all",
+						},
+						...(requestData.parentSpan
+							? [
+									{
+										label: "Parent Span:",
+										value: requestData.parentSpan?.spanId,
+										valueContainerClassName: "break-all",
+									},
+								]
+							: []),
+					]}
+				/>
 			</CollapsibleSection>
 		</div>
 	);
@@ -321,7 +326,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 	return (
 		<div className="space-y-4">
 			{/* Status and Basic Info */}
-			<div className="bg-panel p-4 rounded-lg border border-gray-600">
+			<div className="p-4 rounded-lg border border-gray-600">
 				<div className="flex items-center justify-between mb-3">
 					<div className="flex items-center gap-3">
 						<span
@@ -576,7 +581,7 @@ export default function SidePanel({
 			<div
 				ref={panelRef}
 				className={`
-					relative bg-dark border-l border-gray-600 shadow-2xl
+					relative bg-white border-l border-gray-600 shadow-2xl
 					h-full overflow-hidden flex
 					transform transition-transform duration-300 ease-in-out
 					${isOpen ? "translate-x-0" : "translate-x-full"}
@@ -602,7 +607,7 @@ export default function SidePanel({
 				{/* Panel Content */}
 				<div className="flex-1 flex flex-col min-w-0">
 					{/* Header */}
-					<div className="flex items-center justify-between p-4 border-b border-gray-600 bg-panel">
+					<div className="flex items-center justify-between p-4 border-b border-gray-600">
 						<h2 id="panel-title" className="text-lg font-semibold text-primary">
 							Request Details
 						</h2>
@@ -630,7 +635,7 @@ export default function SidePanel({
 					</div>
 
 					{/* Tab Navigation */}
-					<div className="flex border-b border-gray-600 bg-panel">
+					<div className="flex border-b border-gray-600">
 						<button
 							type="button"
 							onClick={() => handleTabChange("request")}

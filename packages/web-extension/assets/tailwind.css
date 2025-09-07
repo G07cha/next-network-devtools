@@ -16,6 +16,16 @@
 	--color-error-text: var(--color-primary-inverted);
 	--color-error-bg: #e74c3c;
 
+	--color-border-primary: var(--color-tertiary);
+	--color-border-primary-hover: #6b7280;
+
+	/* Secondary Borders - Supporting borders, separators */
+	--color-border-secondary: var(--color-secondary);
+	--color-border-secondary-hover: #4b5563;
+
+	/* Tertiary Borders - Subtle borders, light separators */
+	--color-border-tertiary: var(--color-tertiary);
+	--color-border-tertiary-hover: #374151;
 	/* Component colors */
 
 	/* 
@@ -54,16 +64,6 @@
 	/* ===== BORDER COLORS ===== */
 
 	/* Primary Borders - Main borders, dividers, strong emphasis */
-	--color-border-primary: #4b5563; /* gray-600 */
-	--color-border-primary-hover: #6b7280;
-
-	/* Secondary Borders - Supporting borders, separators */
-	--color-border-secondary: #374151; /* gray-700 */
-	--color-border-secondary-hover: #4b5563;
-
-	/* Tertiary Borders - Subtle borders, light separators */
-	--color-border-tertiary: #1f2937; /* gray-800 */
-	--color-border-tertiary-hover: #374151;
 
 	/* ===== STATUS COLORS ===== */
 
@@ -117,7 +117,6 @@
 	/* ===== UTILITY OVERRIDES ===== */
 
 	/* Override existing custom colors to use semantic tokens */
-	--color-primary: var(--color-success);
 	--color-blue: var(--color-info);
 	--color-dark: var(--color-container-primary);
 	--color-panel: var(--color-container-secondary);
@@ -127,44 +126,6 @@
 
 /* Custom utility classes for semantic color usage */
 @layer utilities {
-	/* Container Background Utilities */
-	.bg-primary-container {
-		background-color: var(--color-neutral-bg);
-	}
-	.bg-secondary-container {
-		background-color: var(--color-container-secondary);
-	}
-	.bg-tertiary-container {
-		background-color: var(--color-container-tertiary);
-	}
-
-	/* Border Utilities */
-	.border-primary-border {
-		border-color: var(--color-border-primary);
-	}
-	.border-secondary-border {
-		border-color: var(--color-border-secondary);
-	}
-	.border-tertiary-border {
-		border-color: var(--color-border-tertiary);
-	}
-
-	.border-success {
-		border-color: var(--color-success-border);
-	}
-	.border-info {
-		border-color: var(--color-info-border);
-	}
-	.border-warning {
-		border-color: var(--color-warning-border);
-	}
-	.border-error {
-		border-color: var(--color-error-border);
-	}
-	.border-neutral {
-		border-color: var(--color-neutral-border);
-	}
-
 	/* Interactive States */
 	.bg-button-primary {
 		background-color: var(--color-button-primary);

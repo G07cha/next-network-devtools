@@ -163,30 +163,6 @@ export function transformSpanTreeToTableData(
 	return result;
 }
 
-function StatusCode({ status }: { status: number }) {
-	return (
-		<span
-			className={cn(
-				"font-medium",
-				(() => {
-					switch (status) {
-						case 200:
-							return "text-blue bg-blue/10";
-						case 400:
-							return "text-warning bg-warning/10";
-						case 404:
-							return "text-error bg-error/10";
-						default:
-							return "text-gray-400 bg-gray-400/10";
-					}
-				})(),
-			)}
-		>
-			{status}
-		</span>
-	);
-}
-
 export function HttpRequestsTable({
 	data,
 	loading = false,
@@ -355,7 +331,7 @@ export function HttpRequestsTable({
 
 	if (error) {
 		return (
-			<div className="flex h-full items-center justify-center h-32 text-error bg-panel rounded-lg border border-error/20">
+			<div className="flex h-full items-center justify-center text-error border-t-2 border-primary">
 				<div className="text-center">
 					<div className="text-lg font-semibold mb-1">
 						Error loading requests
@@ -368,7 +344,7 @@ export function HttpRequestsTable({
 
 	if (loading) {
 		return (
-			<div className="flex h-full items-center justify-center h-32 text-gray-400 bg-panel rounded-lg border border-gray-600">
+			<div className="flex h-full items-center justify-center text-tertiary border-t-2 border-primary">
 				<div className="text-center">
 					<div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
 					<div>Loading requests...</div>
@@ -379,7 +355,7 @@ export function HttpRequestsTable({
 
 	if (data.length === 0) {
 		return (
-			<div className="flex h-full items-center justify-center h-32 text-gray-400 bg-panel rounded-lg border border-gray-600 border-dashed">
+			<div className="flex h-full items-center justify-center text-tertiary border-t-2 border-primary">
 				<div className="text-center">
 					<div className="text-lg font-semibold mb-1">No requests</div>
 					<div className="text-sm">
@@ -393,7 +369,7 @@ export function HttpRequestsTable({
 	return (
 		<div
 			className={cn(
-				"rounded-lg border h-full border-gray-600 overflow-hidden",
+				"border-t-2 h-full border-primary overflow-hidden",
 				className,
 			)}
 			onKeyDown={handleKeyDown}
@@ -401,8 +377,8 @@ export function HttpRequestsTable({
 			aria-label="HTTP Requests Table"
 		>
 			{/* Table Header */}
-			<div className="border-b border-gray-600 px-4 py-3">
-				<div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-300">
+			<div className="border-b border-primary px-4 py-3">
+				<div className="grid grid-cols-12 gap-4 text-sm font-medium text-secondary">
 					<button
 						type="button"
 						className="col-span-5 text-left transition-colors flex items-center gap-1"
@@ -473,7 +449,7 @@ export function HttpRequestsTable({
 						>
 							<div className="grid grid-cols-12 gap-4 items-center text-sm">
 								<div
-									className="col-span-5 text-gray-300 truncate"
+									className="col-span-5 text-primary truncate"
 									title={request.url}
 								>
 									{request.isGrouped &&
@@ -496,7 +472,7 @@ export function HttpRequestsTable({
 								</div>
 								<div className="col-span-2 font-medium">{request.method}</div>
 								<div className="col-span-2">{request.status}</div>
-								<div className="col-span-3 text-gray-400 font-mono">
+								<div className="col-span-3 text-primary font-mono">
 									{formatDuration(request.duration)}
 								</div>
 							</div>

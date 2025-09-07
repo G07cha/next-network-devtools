@@ -136,7 +136,7 @@ export function WaterfallChart({
 	if (!data.length) {
 		return (
 			<div
-				className="flex items-center justify-center h-32 text-tertiary-content bg-neutral-light border-y-2 border-dashed border-y-secondary-border"
+				className="flex items-center justify-center h-32 text-tertiary-content bg-neutral-light"
 				style={{ height: `${chartHeight}px` }}
 			>
 				No timing data available
