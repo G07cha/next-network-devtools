@@ -8,22 +8,13 @@ import { parse } from "url";
 import { type WebSocket, WebSocketServer } from "ws";
 import type { ServerEvent } from "@/packages/types";
 import { createInterceptor } from "./interceptor";
+import { hrTimeToMilliseconds } from "./utils";
 
 // Key is requestID
 const requestTimings = new Map<string, { startMs: number }>();
 const spans = new Map<string, ReadableSpan>();
 
 export const createServer = (spanProcessor: SpanProcessor) => {
-	const interceptor = createInterceptor();
-
-	spanProcessor.onStart = (span) => {
-		spans.set(span.spanContext().spanId, span);
-	};
-
-	spanProcessor.onEnd = (span) => {
-		spans.set(span.spanContext().spanId, span);
-	};
-
 	const server = createHttpServer((req, res) => {
 		const { pathname } = parse(req.url || "", true);
 
@@ -93,6 +84,35 @@ export const createServer = (spanProcessor: SpanProcessor) => {
 		}
 	}
 
+	spanProcessor.onStart = (span) => {
+		spans.set(span.spanContext().spanId, span);
+		broadcast({
+			type: "span-start",
+			data: {
+				id: span.attributes["next.span_name"]?.toString() ?? span.name,
+				spanId: span.spanContext().spanId,
+				start: hrTimeToMilliseconds(span.startTime),
+				traceId: span.spanContext().traceId,
+				parentSpan: span.parentSpanContext,
+			},
+		});
+	};
+
+	spanProcessor.onEnd = (span) => {
+		spans.set(span.spanContext().spanId, span);
+		broadcast({
+			type: "span-end",
+			data: {
+				id: span.attributes["next.span_name"]?.toString() ?? span.name,
+				spanId: span.spanContext().spanId,
+				start: hrTimeToMilliseconds(span.startTime),
+				traceId: span.spanContext().traceId,
+				parentSpan: span.parentSpanContext,
+				end: hrTimeToMilliseconds(span.endTime),
+			},
+		});
+	};
+
 	const getSpanContext = (entity: Request | Response) => {
 		const extractedContext = propagation.extract(
 			context.active(),
@@ -117,6 +137,8 @@ export const createServer = (spanProcessor: SpanProcessor) => {
 		}
 		return { spanId, traceId, parentSpan };
 	};
+
+	const interceptor = createInterceptor();
 
 	interceptor.on("request", async (req) => {
 		const start = Date.now();
