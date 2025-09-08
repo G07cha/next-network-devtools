@@ -21,42 +21,6 @@ export interface SidePanelProps {
 
 type TabType = "request" | "response";
 
-interface CopyButtonProps {
-	content: string;
-	label: string;
-	className?: string;
-}
-
-export function CopyButton({
-	content,
-	label,
-	className = "",
-}: CopyButtonProps) {
-	const [copied, setCopied] = useState(false);
-
-	const handleCopy = async () => {
-		try {
-			await navigator.clipboard.writeText(content);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
-		} catch (err) {
-			console.error("Failed to copy:", err);
-		}
-	};
-
-	return (
-		<button
-			type="button"
-			onClick={handleCopy}
-			className={`px-2 py-1 text-xs hover:bg-gray-600 rounded transition-colors ${className}`}
-			title={`Copy ${label}`}
-			disabled={!content}
-		>
-			{copied ? "☑️" : "📋"}
-		</button>
-	);
-}
-
 type PropertyListEntry = {
 	label: string;
 	value: ReactNode;
@@ -130,12 +94,6 @@ function CollapsibleSection({
 			)}
 		</div>
 	);
-}
-
-export interface CodeBlockProps {
-	content: string;
-	language?: string;
-	maxHeight?: string;
 }
 
 interface HeadersDisplayProps {
