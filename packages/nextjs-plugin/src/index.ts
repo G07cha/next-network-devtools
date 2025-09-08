@@ -23,6 +23,6 @@ export function register() {
 function startLocalServer() {
 	const server = createServer(simpleSpanProcessor);
 	server.listen(3300, () => {
-		console.log("OpenTelemetry local server running on http://localhost:3300");
+		console.log("NextNetwork: Plugin server running on http://localhost:3300");
 	});
 }
