@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
-import type { SpanTree } from "@/packages/web-extension/utils/spans";
+import type { SpanTree } from "../../../utils/spans";
 import { cn } from "../../../utils/style";
+import { formatDuration } from "../../../utils/time";
 
 type SpanNode = {
 	// Server span data (from span-start/span-end events)
@@ -189,11 +190,6 @@ export function HttpRequestsTable({
 	const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 	const tableRef = useRef<HTMLDivElement>(null);
 	const [scrollTop, setScrollTop] = useState(0);
-
-	const formatDuration = (duration?: number) => {
-		if (duration === undefined || duration === null) return "";
-		return `${duration.toFixed(2)}ms`;
-	};
 
 	const truncateUrl = (url: string, maxLength = 50) => {
 		if (url.length <= maxLength) return url;
@@ -485,7 +481,9 @@ export function HttpRequestsTable({
 								<div className="col-span-2 font-medium">{request.method}</div>
 								<div className="col-span-2">{request.status}</div>
 								<div className="col-span-3 text-primary font-mono">
-									{formatDuration(request.duration)}
+									{typeof request.duration === "number"
+										? formatDuration(request.duration)
+										: "-"}
 								</div>
 							</div>
 						</div>

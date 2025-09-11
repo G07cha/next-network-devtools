@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { RequestSpan, ResponseSpan } from "@/packages/types";
+import { formatDuration } from "../../../utils/time";
 
 interface TimingData {
 	id: string;
@@ -225,7 +226,7 @@ export function WaterfallChart({
 								className="absolute text-xs text-secondary-content transform -translate-x-1/2"
 								style={{ left: `${i * 10}%` }}
 							>
-								{timePoint.toFixed(0)}ms
+								{formatDuration(timePoint)}
 							</div>
 						);
 					})}

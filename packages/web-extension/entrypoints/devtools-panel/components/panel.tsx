@@ -9,6 +9,7 @@ import {
 } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
 import { cn } from "../../../utils/style";
+import { formatDuration } from "../../../utils/time";
 import { CodeBlock } from "./code-block";
 
 export interface SidePanelProps {
@@ -306,7 +307,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 					</div>
 					{responseTime && (
 						<span className="text-gray-400 text-sm">
-							{responseTime.toFixed(2)}ms
+							{formatDuration(responseTime)}ms
 						</span>
 					)}
 				</div>
@@ -351,7 +352,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 						<div className="flex justify-between">
 							<span className="text-gray-400">Response Time:</span>
 							<span className="font-mono text-gray-300">
-								{responseTime.toFixed(2)}ms
+								{formatDuration(responseTime)}ms
 							</span>
 						</div>
 					)}
@@ -431,7 +432,7 @@ function ServerSpanTab({
 					</div>
 					{duration && (
 						<span className="text-gray-400 text-sm">
-							{duration.toFixed(2)}ms
+							{formatDuration(duration)}
 						</span>
 					)}
 				</div>
@@ -465,7 +466,7 @@ function ServerSpanTab({
 							? [
 									{
 										label: "Duration:",
-										value: `${duration.toFixed(2)}ms`,
+										value: formatDuration(duration),
 										valueContainerClassName: "break-all",
 									},
 								]
