@@ -7,19 +7,25 @@ import {
 	useRef,
 	useState,
 } from "react";
-import type { RequestSpan, ResponseSpan } from "@/packages/types";
+import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
+import { cn } from "../../../utils/style";
 import { CodeBlock } from "./code-block";
 
 export interface SidePanelProps {
 	requestData?: RequestSpan;
 	responseData?: ResponseSpan;
+	serverSpanData?: {
+		start?: Span;
+		end?: Span;
+		isActive: boolean;
+	};
 	isOpen: boolean;
 	onClose: () => void;
 	className?: string;
 	isLoading?: boolean;
 }
 
-type TabType = "request" | "response";
+type TabType = "request" | "response" | "server-span";
 
 type PropertyListEntry = {
 	label: string;
@@ -381,6 +387,127 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 	);
 }
 
+function ServerSpanTab({
+	serverSpanData,
+}: {
+	serverSpanData?: { start?: Span; end?: Span; isActive: boolean };
+}) {
+	if (!serverSpanData) {
+		return (
+			<div className="flex items-center justify-center h-64 text-gray-400">
+				<div className="text-center">
+					<div className="text-lg font-semibold mb-2">No Server Span Data</div>
+					<div className="text-sm">
+						Server span information is not available
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	const duration =
+		serverSpanData.start && serverSpanData.end
+			? serverSpanData.end.end! - serverSpanData.start.start
+			: undefined;
+
+	return (
+		<div className="space-y-4">
+			{/* Server Span Status */}
+			<div className="p-4 rounded-lg border border-gray-600">
+				<div className="flex items-center justify-between mb-3">
+					<div className="flex items-center gap-3">
+						<span
+							className={`px-3 py-1 rounded font-medium text-sm ${
+								serverSpanData.isActive
+									? "bg-warning/20 text-warning"
+									: "bg-primary/20 text-primary"
+							}`}
+						>
+							{serverSpanData.isActive ? "ACTIVE" : "COMPLETED"}
+						</span>
+						<span className="font-medium text-primary">
+							{serverSpanData.start?.id || "Unknown Server Span"}
+						</span>
+					</div>
+					{duration && (
+						<span className="text-gray-400 text-sm">
+							{duration.toFixed(2)}ms
+						</span>
+					)}
+				</div>
+			</div>
+
+			{/* Timing Information */}
+			<CollapsibleSection title="Timing Information" defaultExpanded={true}>
+				<PropertyList
+					data={[
+						...(serverSpanData.start
+							? [
+									{
+										label: "Start Time:",
+										value: new Date(
+											serverSpanData.start.start,
+										).toLocaleString(),
+										valueContainerClassName: "break-all",
+									},
+								]
+							: []),
+						...(serverSpanData.end
+							? [
+									{
+										label: "End Time:",
+										value: new Date(serverSpanData.end.end!).toLocaleString(),
+										valueContainerClassName: "break-all",
+									},
+								]
+							: []),
+						...(duration
+							? [
+									{
+										label: "Duration:",
+										value: `${duration.toFixed(2)}ms`,
+										valueContainerClassName: "break-all",
+									},
+								]
+							: []),
+					]}
+				/>
+			</CollapsibleSection>
+
+			{/* Server Span Metadata */}
+			<CollapsibleSection title="Server Span Metadata" defaultExpanded={false}>
+				<PropertyList
+					data={[
+						...(serverSpanData.start
+							? [
+									{
+										label: "Span ID:",
+										value: serverSpanData.start.spanId,
+										valueContainerClassName: "break-all",
+									},
+									{
+										label: "Trace ID:",
+										value: serverSpanData.start.traceId,
+										valueContainerClassName: "break-all",
+									},
+									...(serverSpanData.start.parentSpan
+										? [
+												{
+													label: "Parent Span:",
+													value: serverSpanData.start.parentSpan.spanId,
+													valueContainerClassName: "break-all",
+												},
+											]
+										: []),
+								]
+							: []),
+					]}
+				/>
+			</CollapsibleSection>
+		</div>
+	);
+}
+
 function LoadingSkeleton() {
 	return (
 		<div className="space-y-4 animate-pulse">
@@ -395,17 +522,29 @@ function LoadingSkeleton() {
 export default function SidePanel({
 	requestData,
 	responseData,
+	serverSpanData,
 	isOpen,
 	onClose,
 	className = "",
 	isLoading = false,
 }: SidePanelProps) {
-	const [activeTab, setActiveTab] = useState<TabType>("request");
+	const [activeTab, setActiveTab] = useState<TabType>(
+		serverSpanData ? "server-span" : "request",
+	);
 	const [panelWidth, setPanelWidth] = useState(400); // Default width in pixels
 	const [isResizing, setIsResizing] = useState(false);
 	const panelRef = useRef<HTMLDivElement>(null);
 	const closeButtonRef = useRef<HTMLButtonElement>(null);
 	const resizeHandleRef = useRef<HTMLButtonElement>(null);
+
+	// Reset active tab when entry changes
+	useEffect(() => {
+		if (serverSpanData) {
+			setActiveTab("server-span");
+		} else {
+			setActiveTab("request");
+		}
+	}, [serverSpanData]);
 
 	// Focus management
 	useEffect(() => {
@@ -594,6 +733,26 @@ export default function SidePanel({
 
 					{/* Tab Navigation */}
 					<div className="flex border-b border-gray-600">
+						{serverSpanData && (
+							<button
+								type="button"
+								onClick={() => handleTabChange("server-span")}
+								className={`
+									flex-1 py-3 px-4 text-sm font-medium transition-colors
+									focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
+									${
+										activeTab === "server-span"
+											? "text-primary border-b-2 border-primary bg-gray-800/50"
+											: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
+									}
+								`}
+								role="tab"
+								aria-selected={activeTab === "server-span"}
+								aria-controls="server-span-panel"
+							>
+								Server Span
+							</button>
+						)}
 						<button
 							type="button"
 							onClick={() => handleTabChange("request")}
@@ -609,8 +768,12 @@ export default function SidePanel({
 							role="tab"
 							aria-selected={activeTab === "request"}
 							aria-controls="request-panel"
+							disabled={!requestData}
 						>
 							Request
+							{!requestData && (
+								<span className="ml-1 text-xs text-gray-500">(N/A)</span>
+							)}
 						</button>
 						<button
 							type="button"
@@ -643,6 +806,18 @@ export default function SidePanel({
 								<LoadingSkeleton />
 							) : (
 								<>
+									{serverSpanData && (
+										<div
+											id="server-span-panel"
+											role="tabpanel"
+											aria-labelledby="server-span-tab"
+											hidden={activeTab !== "server-span"}
+										>
+											{activeTab === "server-span" && (
+												<ServerSpanTab serverSpanData={serverSpanData} />
+											)}
+										</div>
+									)}
 									<div
 										id="request-panel"
 										role="tabpanel"

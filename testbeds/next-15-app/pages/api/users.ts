@@ -9,6 +9,14 @@ export default function handler(
 	res: NextApiResponse<User[]>,
 ) {
 	fetch(
+		"http://localhost:4000/api/mock?status=200&delay=100&body=" +
+			JSON.stringify(users),
+	);
+	fetch(
+		"http://localhost:4000/api/mock?status=200&delay=2000&body=" +
+			JSON.stringify(users),
+	);
+	fetch(
 		"http://localhost:4000/api/mock?status=200&delay=1000&body=" +
 			JSON.stringify(users),
 	)
@@ -18,6 +26,6 @@ export default function handler(
 		})
 		.catch((error) => {
 			console.error("Error fetching users:", error);
-			res.status(500).json({ error: "Failed to fetch users" });
+			res.status(500);
 		});
 }

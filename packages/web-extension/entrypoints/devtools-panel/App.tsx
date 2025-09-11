@@ -1,5 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import type { RequestSpan, ResponseSpan, ServerEvent } from "@/packages/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ServerEvent } from "@/packages/types";
+import {
+	filterEmptySpans,
+	mapServerEventToSpanTree,
+	type SpanTree,
+} from "../../utils/spans";
 import {
 	ConnectionBanner,
 	ConnectionStatus,
@@ -13,30 +18,10 @@ import WaterfallChart, {
 	spanNodesToTimingData,
 } from "./components/waterfall-chart";
 
-export type SpanNode = {
-	request?: RequestSpan;
-	response?: ResponseSpan;
-	children: SpanNode[];
-};
-
-function buildTree(spans: Record<string, SpanNode>): SpanNode[] {
-	const roots: SpanNode[] = [];
-	Object.values(spans).forEach((node) => {
-		if (!node.request?.parentSpan?.spanId) {
-			roots.push(node);
-		} else {
-			const parent = spans[node.request.parentSpan.spanId];
-			if (parent) parent.children.push(node);
-			else roots.push(node);
-		}
-	});
-	return roots;
-}
-
 const WS_URL = "ws://localhost:3300/";
 
 export default function App() {
-	const [spans, setSpans] = useState<Record<string, SpanNode>>({});
+	const [spans, setSpans] = useState<SpanTree>({});
 	const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
 		ConnectionStatus.Connecting,
 	);
@@ -63,18 +48,12 @@ export default function App() {
 			ws.onerror = () => setConnectionStatus(ConnectionStatus.Error);
 
 			ws.onmessage = (event) => {
-				console.log("event", event);
 				try {
-					const { type, data } = JSON.parse(event.data) as ServerEvent;
+					const parsedEvent = JSON.parse(event.data) as ServerEvent;
 					setSpans((prev) => {
-						const id = data.id;
-						const node = prev[id] || { children: [] };
-						if (type === "request") {
-							node.request = data;
-						} else if (type === "response") {
-							node.response = data;
-						}
-						return { ...prev, [id]: node };
+						const newSpans = mapServerEventToSpanTree(parsedEvent, prev);
+
+						return { ...newSpans };
 					});
 				} catch (e) {
 					console.error("Error parsing WebSocket message:", e);
@@ -89,9 +68,6 @@ export default function App() {
 		};
 	}, []);
 
-	// Intended for RequestTree component
-	const tree = buildTree(spans);
-
 	const handleRowClick = (request: HttpRequestData) => {
 		setSelectedRequestId(request.id);
 		setIsPanelOpen(true);
@@ -102,23 +78,35 @@ export default function App() {
 		setSelectedRequestId(null);
 	};
 
-	const requestData = transformSpanTreeToTableData(Object.values(spans));
-	const selectedRequest = requestData.find(
-		(request) => request.id === selectedRequestId,
+	const filteredSpans = useMemo(() => filterEmptySpans(spans), [spans]);
+	const requestData = useMemo(
+		() => transformSpanTreeToTableData(filteredSpans),
+		[filteredSpans],
 	);
+	console.log(spans, filteredSpans, requestData);
+	const selectedRequest = useMemo(
+		() => requestData.find((request) => request.id === selectedRequestId),
+		[requestData, selectedRequestId],
+	);
+
+	const selectedSpanNode = selectedRequestId
+		? spans[selectedRequestId]
+		: undefined;
+	const serverSpanData = selectedSpanNode?.isServerSpan
+		? selectedSpanNode.serverSpan
+		: undefined;
 
 	return (
 		<div className="flex flex-col h-full">
 			<ConnectionBanner status={connectionStatus} />
-			<WaterfallChart data={spanNodesToTimingData(spans)} />
+			<WaterfallChart data={spanNodesToTimingData(filteredSpans)} />
 			<div className="relative h-full">
 				<HttpRequestsTable data={requestData} onRowClick={handleRowClick} />
-				{/* <RequestTree nodes={tree} /> */}
 
-				{/* Side Panel */}
 				<SidePanel
 					requestData={selectedRequest?.request}
 					responseData={selectedRequest?.response}
+					serverSpanData={serverSpanData}
 					isOpen={isPanelOpen}
 					onClose={handlePanelClose}
 				/>

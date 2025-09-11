@@ -1,3 +1,4 @@
+import { browser } from "wxt/browser";
 import type { NextjsDetectionResult } from "./nextjs-detector";
 
 export enum ExtensionMessageType {

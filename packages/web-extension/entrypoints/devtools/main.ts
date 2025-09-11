@@ -1,4 +1,9 @@
-import { ExtensionMessageType, sendMessage } from "../../utils/messaging";
+import { browser } from "wxt/browser";
+import {
+	ExtensionMessageType,
+	isDevToolsResponseMessage,
+	sendMessage,
+} from "../../utils/messaging";
 
 let panelCreated = false;
 

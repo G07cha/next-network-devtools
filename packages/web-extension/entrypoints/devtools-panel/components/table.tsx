@@ -1,11 +1,24 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { RequestSpan, ResponseSpan } from "@/packages/types";
+import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
+import type { SpanTree } from "@/packages/web-extension/utils/spans";
 import { cn } from "../../../utils/style";
 
 type SpanNode = {
+	// Server span data (from span-start/span-end events)
+	serverSpan?: {
+		start?: Span;
+		end?: Span;
+		isActive: boolean;
+	};
+	// Request/response data (existing)
 	request?: RequestSpan;
 	response?: ResponseSpan;
+	// Hierarchical structure
 	children: SpanNode[];
+	// Metadata for organization
+	spanId?: string;
+	parentSpanId?: string;
+	isServerSpan: boolean;
 };
 
 export interface HttpRequestData {
@@ -48,75 +61,8 @@ interface GroupState {
 const ITEM_HEIGHT = 48;
 const VIEWPORT_HEIGHT = 400;
 
-export function transformSpanNodesToTableData(
-	spans: Record<string, SpanNode>,
-): HttpRequestData[] {
-	const result: HttpRequestData[] = [];
-	const groupMap = new Map<string, HttpRequestData[]>();
-
-	Object.entries(spans).forEach(([id, node]) => {
-		if (!node.request) return;
-
-		const duration =
-			node.request.start && node.response?.end
-				? node.response.end - node.request.start
-				: undefined;
-
-		const parentSpanId = node.request.parentSpan?.spanId;
-
-		const requestData: HttpRequestData = {
-			id,
-			parentSpanId,
-			status: node.response?.status,
-			method: node.request.method,
-			url: node.request.url,
-			duration,
-			timestamp: node.request.start,
-			request: node.request,
-			response: node.response,
-			level: 0,
-			isGrouped: false,
-			children: [],
-		};
-
-		if (parentSpanId) {
-			if (!groupMap.has(parentSpanId)) {
-				groupMap.set(parentSpanId, []);
-			}
-			groupMap.get(parentSpanId)?.push(requestData);
-		} else {
-			result.push(requestData);
-		}
-	});
-
-	result.forEach((request) => {
-		if (groupMap.has(request.id)) {
-			const children = groupMap.get(request.id);
-			if (!children) return;
-			request.children = children;
-			request.isGrouped = true;
-			request.groupId = request.id;
-
-			children.forEach((child) => {
-				child.level = 1;
-				child.groupId = request.id;
-			});
-		}
-	});
-
-	const flatResult: HttpRequestData[] = [];
-	result.forEach((request) => {
-		flatResult.push(request);
-		if (request.children && request.children.length > 0) {
-			flatResult.push(...request.children);
-		}
-	});
-
-	return flatResult.sort((a, b) => a.timestamp - b.timestamp);
-}
-
 export function transformSpanTreeToTableData(
-	nodes: SpanNode[],
+	spanTree: SpanTree,
 ): HttpRequestData[] {
 	const result: HttpRequestData[] = [];
 
@@ -125,42 +71,106 @@ export function transformSpanTreeToTableData(
 		level: number = 0,
 		parentId?: string,
 	): void {
-		if (!node.request) return;
+		// Process server spans as organizational units
+		if (node.isServerSpan && node.serverSpan) {
+			// Extract span attributes for better display
+			const spanStart = node.serverSpan.start;
+			const spanEnd = node.serverSpan.end;
 
-		const duration =
-			node.request.start && node.response?.end
-				? node.response.end - node.request.start
-				: undefined;
+			// Calculate accurate timing from OpenTelemetry span data
+			const startTime = spanStart?.start || 0;
+			const endTime = spanEnd?.end || spanStart?.end || 0;
+			const duration = endTime > startTime ? endTime - startTime : undefined;
 
-		const requestData: HttpRequestData = {
-			id: node.request.id,
-			parentSpanId: parentId,
-			status: node.response?.status,
-			method: node.request.method,
-			url: node.request.url,
-			duration,
-			timestamp: node.request.start,
-			request: node.request,
-			response: node.response,
-			level,
-			isGrouped: node.children.length > 0,
-			groupId: node.children.length > 0 ? node.request.id : undefined,
-			children: [],
-		};
+			// Create a meaningful display name from span attributes
+			const displayName =
+				spanStart?.id || `Server Span ${node.spanId || "Unknown"}`;
 
-		result.push(requestData);
+			const serverSpanData: HttpRequestData = {
+				id: node.spanId || `server-${Date.now()}-${Math.random()}`,
+				parentSpanId: parentId,
+				status: undefined, // Server spans don't have HTTP status
+				method: "",
+				url: displayName,
+				duration,
+				timestamp: startTime,
+				request: undefined, // Server spans don't have request data
+				response: undefined,
+				level,
+				isGrouped: node.children.length > 0,
+				groupId: node.children.length > 0 ? node.spanId : undefined,
+				children: [],
+			};
 
-		if (node.children.length > 0) {
+			result.push(serverSpanData);
+
+			// Process child nodes (requests/responses or nested server spans) under this server span
+			if (node.children.length > 0) {
+				node.children.forEach((child) => {
+					processNode(child, level + 1, node.spanId);
+				});
+			}
+		}
+		// Process regular request/response nodes
+		else if (node.request) {
+			// Calculate accurate duration from request/response timing
+			const requestStart = node.request.start || 0;
+			const responseEnd = node.response?.end || node.request.end || 0;
+			const duration =
+				responseEnd > requestStart ? responseEnd - requestStart : undefined;
+
+			// Use the request ID as the primary identifier
+			const requestId = node.request.id;
+
+			const requestData: HttpRequestData = {
+				id: requestId,
+				parentSpanId: parentId,
+				status: node.response?.status,
+				method: node.request.method,
+				url: node.request.url,
+				duration,
+				timestamp: requestStart,
+				request: node.request,
+				response: node.response,
+				level,
+				isGrouped: node.children.length > 0,
+				groupId: node.children.length > 0 ? requestId : undefined,
+				children: [],
+			};
+
+			result.push(requestData);
+
+			// Process child nodes (nested requests or server spans)
+			if (node.children.length > 0) {
+				node.children.forEach((child) => {
+					processNode(child, level + 1, requestId);
+				});
+			}
+		}
+		// Handle nodes that might have children but no direct request data
+		else if (node.children.length > 0) {
+			// Process orphaned children - this handles edge cases where hierarchy exists
+			// but the parent node doesn't have complete data
 			node.children.forEach((child) => {
-				if (node.request?.id) {
-					processNode(child, level + 1, node.request.id);
-				}
+				processNode(child, level, parentId);
 			});
 		}
 	}
 
-	nodes.forEach((node) => processNode(node));
-	return result;
+	// Convert SpanTree (Record) to array of nodes for processing
+	const nodes = Object.values(spanTree);
+
+	// Find root nodes (nodes without parents or with parents not in the current tree)
+	const rootNodes = nodes.filter((node) => {
+		const parentId = node.parentSpanId;
+		return !parentId || !spanTree[parentId];
+	});
+
+	// Process all root nodes - hierarchy is already built by the spans utility
+	rootNodes.forEach((node) => processNode(node));
+
+	// Sort by timestamp to maintain chronological order
+	return result.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 export function HttpRequestsTable({
@@ -234,12 +244,13 @@ export function HttpRequestsTable({
 			processed = sortData(processed, sortState.column, sortState.direction);
 		}
 
-		return processed.filter((item) => {
-			if (item.groupId && !groupState[item.groupId]) {
-				return false;
-			}
-			return true;
-		});
+		return processed;
+		// return processed.filter((item) => {
+		// 	if (item.groupId && !groupState[item.groupId]) {
+		// 		return false;
+		// 	}
+		// 	return true;
+		// });
 	}, [data, sortState, groupState, sortData]);
 
 	const handleSort = (column: SortColumn) => {
@@ -438,18 +449,19 @@ export function HttpRequestsTable({
 								selectedRowId === request.id
 									? "bg-primary/10 border-primary/50"
 									: "",
-								request.level > 0 ? "" : "",
 							)}
 							onClick={(e) => handleRowClick(request, e)}
 							tabIndex={0}
 							style={{
-								paddingLeft: `${16 + request.level * 24}px`,
 								...(virtualScrolling ? { height: `${ITEM_HEIGHT}px` } : {}),
 							}}
 						>
 							<div className="grid grid-cols-12 gap-4 items-center text-sm">
 								<div
 									className="col-span-5 text-primary truncate"
+									style={{
+										paddingLeft: `${request.level * 24}px`,
+									}}
 									title={request.url}
 								>
 									{request.isGrouped &&

@@ -13,4 +13,5 @@ export default defineConfig({
 			delete wxt.config.alias["@@"];
 		},
 	},
+	imports: false,
 });

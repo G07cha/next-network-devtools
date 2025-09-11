@@ -26,21 +26,69 @@ interface PositionedTiming extends TimingData {
 
 // Utility function to convert span nodes to timing data
 export function spanNodesToTimingData(
-	spans: Record<string, { request?: RequestSpan; response?: ResponseSpan }>,
+	spans: Record<
+		string,
+		{
+			serverSpan?: {
+				start?: import("@/packages/types").Span;
+				end?: import("@/packages/types").Span;
+				isActive: boolean;
+			};
+			request?: RequestSpan;
+			response?: ResponseSpan;
+			isServerSpan: boolean;
+			spanId?: string;
+		}
+	>,
 ): TimingData[] {
 	return Object.entries(spans)
-		.filter(
-			([_, node]) => node.request && node.request.start && node.response?.end,
-		)
-		.map(([id, node]) => ({
-			id,
-			start: node.request!.start,
-			end: node.response!.end!,
-			method: node.request!.method,
-			url: node.request!.url,
-			status: node.response?.status,
-			label: `${node.request!.method} ${node.request!.url}`,
-		}));
+		.filter(([_, node]) => {
+			// Include server spans with timing data
+			if (node.isServerSpan && node.serverSpan?.start && node.serverSpan?.end) {
+				return true;
+			}
+			// Include request/response pairs with timing data
+			if (node.request?.start && node.response?.end) {
+				return true;
+			}
+			return false;
+		})
+		.map(([id, node]) => {
+			// Handle server spans
+			if (node.isServerSpan && node.serverSpan?.start && node.serverSpan?.end) {
+				return {
+					id,
+					start: node.serverSpan.start.start,
+					end: node.serverSpan.end.end!,
+					method: "SERVER",
+					url: node.serverSpan.start.id || "Server Span",
+					status: undefined,
+					label: `Server: ${node.serverSpan.start.id || "Unknown"}`,
+				};
+			}
+			// Handle request/response pairs
+			else if (node.request && node.response?.end) {
+				return {
+					id,
+					start: node.request.start,
+					end: node.response.end,
+					method: node.request.method,
+					url: node.request.url,
+					status: node.response?.status,
+					label: `${node.request.method} ${node.request.url}`,
+				};
+			}
+			// Fallback (shouldn't reach here due to filter)
+			return {
+				id,
+				start: 0,
+				end: 0,
+				method: "UNKNOWN",
+				url: "Unknown",
+				status: undefined,
+				label: "Unknown",
+			};
+		});
 }
 
 export function WaterfallChart({
@@ -124,7 +172,9 @@ export function WaterfallChart({
 		totalRows * (rowHeight + padding) + padding + 40,
 	); // +40 for time axis
 
-	const getStatusColor = (status?: number) => {
+	const getStatusColor = (status?: number, method?: string) => {
+		// Special color for server spans
+		if (method === "SERVER") return "bg-blue-500";
 		if (!status) return "bg-neutral-bg";
 		if (status >= 200 && status < 300) return "bg-success-bg";
 		if (status >= 300 && status < 400) return "bg-warning-bg";
@@ -186,13 +236,14 @@ export function WaterfallChart({
 					{positionedData.map((item) => (
 						<div
 							key={item.id}
-							className={`absolute group cursor-pointer ${getStatusColor(item.status)}`}
+							className={`absolute group cursor-pointer ${getStatusColor(item.status, item.method)}`}
 							style={{
 								top: `${item.row * (rowHeight + padding) + padding}px`,
 								left: `${item.left}%`,
 								width: `${item.width}%`,
 								height: `${rowHeight}px`,
 							}}
+							title={item.label}
 						></div>
 					))}
 				</div>
