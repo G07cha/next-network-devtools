@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { RequestSpan, ResponseSpan } from "@/packages/types";
+import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
 import { formatDuration } from "../../../utils/time";
 
 interface TimingData {
@@ -31,8 +31,8 @@ export function spanNodesToTimingData(
 		string,
 		{
 			serverSpan?: {
-				start?: import("@/packages/types").Span;
-				end?: import("@/packages/types").Span;
+				start?: Span;
+				end?: Span;
 				isActive: boolean;
 			};
 			request?: RequestSpan;
@@ -197,7 +197,10 @@ export function WaterfallChart({
 
 	// Calculate time labels for the axis
 	return (
-		<div className="w-full border-y border-y-border-primary overflow-hidden">
+		<div
+			className="w-full border-y border-y-border-primary overflow-hidden"
+			style={{ minHeight: `${chartHeight}px` }}
+		>
 			{/* Chart Container */}
 			<div
 				className="relative overflow-auto"
