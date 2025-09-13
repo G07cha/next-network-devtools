@@ -39,7 +39,7 @@ export function ConnectionBanner({ status }: { status: ConnectionStatus }) {
 	}, [status]);
 
 	return (
-		<div className="self-end flex items-center relative group m-4">
+		<div className="flex items-center relative group">
 			<span className="absolute right-6 w-max bg-white text-dark px-2.5 py-1 rounded-lg text-sm font-medium shadow-lg z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
 				{statusText}
 			</span>
