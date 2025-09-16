@@ -5,8 +5,8 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "wxt",
-		"dev:firefox": "wxt -b firefox",
+		"dev": "wxt -p 5000",
+		"dev:firefox": "wxt -b firefox -p 5000",
 		"build": "wxt build",
 		"build:firefox": "wxt build -b firefox",
 		"zip": "wxt zip",
