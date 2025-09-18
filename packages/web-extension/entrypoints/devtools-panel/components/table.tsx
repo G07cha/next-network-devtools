@@ -376,7 +376,7 @@ export function HttpRequestsTable({
 	return (
 		<div
 			className={cn(
-				"border-t-2 h-full border-primary overflow-hidden",
+				"border-t-2 h-full border-primary overflow-auto",
 				className,
 			)}
 			onKeyDown={handleKeyDown}
@@ -384,7 +384,7 @@ export function HttpRequestsTable({
 			aria-label="HTTP Requests Table"
 		>
 			{/* Table Header */}
-			<div className="border-b border-primary px-4 py-3">
+			<div className="border-b border-primary px-4 py-3 sticky top-0 bg-white">
 				<div className="grid grid-cols-12 gap-4 text-sm font-medium text-secondary">
 					<button
 						type="button"
@@ -420,7 +420,6 @@ export function HttpRequestsTable({
 			{/* Table Body */}
 			<div
 				ref={tableRef}
-				className="overflow-auto"
 				style={{ height: virtualScrolling ? `${VIEWPORT_HEIGHT}px` : "100%" }}
 				onScroll={virtualScrolling ? handleScroll : undefined}
 			>
@@ -453,33 +452,65 @@ export function HttpRequestsTable({
 							}}
 						>
 							<div className="grid grid-cols-12 gap-4 items-center text-sm">
-								<div
-									className="col-span-5 text-primary truncate"
-									style={{
-										paddingLeft: `${request.level * 24}px`,
-									}}
-									title={request.url}
-								>
-									{request.isGrouped &&
-										request.children &&
-										request.children.length > 0 && (
-											<button
-												type="button"
-												className="mr-2 text-primary hover:text-primary/80"
-												onClick={(e) => {
-													e.stopPropagation();
-													if (request.groupId) {
-														handleGroupToggle(request.groupId);
-													}
-												}}
-											>
-												{groupState[request.groupId || ""] ? "�" : "�"}
-											</button>
-										)}
-									{truncateUrl(request.url)}
-								</div>
-								<div className="col-span-2 font-medium">{request.method}</div>
-								<div className="col-span-2">{request.status}</div>
+								{request.method || request.status ? (
+									<>
+										<div
+											className="col-span-5 text-primary truncate"
+											style={{
+												paddingLeft: `${request.level * 12}px`,
+											}}
+											title={request.url}
+										>
+											{request.isGrouped &&
+												request.children &&
+												request.children.length > 0 && (
+													<button
+														type="button"
+														className="mr-2 text-primary hover:text-primary/80"
+														onClick={(e) => {
+															e.stopPropagation();
+															if (request.groupId) {
+																handleGroupToggle(request.groupId);
+															}
+														}}
+													>
+														{groupState[request.groupId || ""] ? "�" : "�"}
+													</button>
+												)}
+											{truncateUrl(request.url)}
+										</div>
+										<div className="col-span-2 font-medium">
+											{request.method}
+										</div>
+										<div className="col-span-2">{request.status}</div>
+									</>
+								) : (
+									<div
+										className="col-span-9 text-primary truncate"
+										style={{
+											paddingLeft: `${request.level * 12}px`,
+										}}
+										title={request.url}
+									>
+										{request.isGrouped &&
+											request.children &&
+											request.children.length > 0 && (
+												<button
+													type="button"
+													className="mr-2 text-primary hover:text-primary/80"
+													onClick={(e) => {
+														e.stopPropagation();
+														if (request.groupId) {
+															handleGroupToggle(request.groupId);
+														}
+													}}
+												>
+													{groupState[request.groupId || ""] ? "�" : "�"}
+												</button>
+											)}
+										{truncateUrl(request.url)}
+									</div>
+								)}
 								<div className="col-span-3 text-primary font-mono">
 									{typeof request.duration === "number"
 										? formatDuration(request.duration)
