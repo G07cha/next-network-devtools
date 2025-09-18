@@ -94,7 +94,7 @@ export function spanNodesToTimingData(
 
 export function WaterfallChart({
 	data,
-	height = 250,
+	height = 150,
 	rowHeight = 4,
 	padding = 8,
 }: WaterfallChartProps) {
@@ -208,10 +208,7 @@ export function WaterfallChart({
 			style={{ minHeight: `${chartHeight}px` }}
 		>
 			{/* Chart Container */}
-			<div
-				className="relative overflow-auto"
-				style={{ height: `${chartHeight}px` }}
-			>
+			<div className="relative" style={{ height: `${chartHeight}px` }}>
 				{/* Grid lines */}
 				<div className="absolute inset-0">
 					{Array.from({ length: 11 }, (_, i) => (
@@ -232,10 +229,10 @@ export function WaterfallChart({
 							<div
 								// biome-ignore lint/suspicious/noArrayIndexKey: static list
 								key={`time-${i}`}
-								className="absolute text-xs text-secondary-content transform -translate-x-1/2"
+								className="absolute text-xs text-secondary-content"
 								style={{ left: `${i * 10}%` }}
 							>
-								{formatDuration(timePoint)}
+								{i === 0 ? null : formatDuration(timePoint)}
 							</div>
 						);
 					})}
