@@ -421,7 +421,7 @@ export function HttpRequestsTable({
 			<div
 				ref={tableRef}
 				className="overflow-auto"
-				style={{ height: virtualScrolling ? `${VIEWPORT_HEIGHT}px` : "auto" }}
+				style={{ height: virtualScrolling ? `${VIEWPORT_HEIGHT}px` : "100%" }}
 				onScroll={virtualScrolling ? handleScroll : undefined}
 			>
 				{virtualScrolling && (

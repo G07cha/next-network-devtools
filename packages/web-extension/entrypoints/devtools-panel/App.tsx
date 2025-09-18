@@ -102,7 +102,7 @@ export default function App() {
 		: undefined;
 
 	return (
-		<div className="flex flex-col h-full">
+		<div className="flex flex-col h-full overflow-hidden">
 			<div className="flex items-center justify-between p-3">
 				<button
 					type="button"
@@ -116,7 +116,7 @@ export default function App() {
 				<ConnectionBanner status={connectionStatus} />
 			</div>
 			<WaterfallChart data={spanNodesToTimingData(filteredSpans)} />
-			<div className="relative h-full">
+			<div className="relative flex-1 overflow-hidden">
 				<HttpRequestsTable data={requestData} onRowClick={handleRowClick} />
 
 				<SidePanel
