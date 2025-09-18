@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
+import type { SpanTree } from "../../../utils/spans";
+import { cn } from "../../../utils/style";
 import { formatDuration } from "../../../utils/time";
 
 interface TimingData {
@@ -17,6 +18,8 @@ interface WaterfallChartProps {
 	height?: number;
 	rowHeight?: number;
 	padding?: number;
+	selectedRequestId?: string;
+	onSpanClick?: (spanId: string) => void;
 }
 
 interface PositionedTiming extends TimingData {
@@ -26,22 +29,7 @@ interface PositionedTiming extends TimingData {
 }
 
 // Utility function to convert span nodes to timing data
-export function spanNodesToTimingData(
-	spans: Record<
-		string,
-		{
-			serverSpan?: {
-				start?: Span;
-				end?: Span;
-				isActive: boolean;
-			};
-			request?: RequestSpan;
-			response?: ResponseSpan;
-			isServerSpan: boolean;
-			spanId?: string;
-		}
-	>,
-): TimingData[] {
+export function spanNodesToTimingData(spans: SpanTree): TimingData[] {
 	return Object.entries(spans)
 		.filter(([_, node]) => {
 			// Include server spans with timing data
@@ -97,6 +85,8 @@ export function WaterfallChart({
 	height = 150,
 	rowHeight = 4,
 	padding = 8,
+	selectedRequestId,
+	onSpanClick,
 }: WaterfallChartProps) {
 	const minTime = useMemo(
 		() => Math.floor(Math.min(...data.map((d) => d.start))),
@@ -241,9 +231,17 @@ export function WaterfallChart({
 				{/* Timing bars */}
 				<div className="relative">
 					{positionedData.map((item) => (
-						<div
+						<button
+							type="button"
+							onClick={() => onSpanClick?.(item.id)}
 							key={item.id}
-							className={`absolute group cursor-pointer ${getStatusColor(item.status, item.method)}`}
+							className={cn(
+								"absolute group cursor-pointer",
+								getStatusColor(item.status, item.method),
+								selectedRequestId && item.id === selectedRequestId
+									? "border border-red-500"
+									: undefined,
+							)}
 							style={{
 								top: `${item.row * (rowHeight + padding) + padding}px`,
 								left: `${item.left}%`,
@@ -251,7 +249,7 @@ export function WaterfallChart({
 								height: `${rowHeight}px`,
 							}}
 							title={item.label}
-						></div>
+						></button>
 					))}
 				</div>
 			</div>

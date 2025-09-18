@@ -45,6 +45,11 @@ export default function App() {
 		setIsPanelOpen(true);
 	};
 
+	const handleChartClick = (requestId: string) => {
+		setSelectedRequestId(requestId);
+		setIsPanelOpen(true);
+	};
+
 	const handlePanelClose = () => {
 		setIsPanelOpen(false);
 		setSelectedRequestId(null);
@@ -116,7 +121,11 @@ export default function App() {
 
 				<ConnectionBanner status={wsStatus} />
 			</div>
-			<WaterfallChart data={spanNodesToTimingData(filteredSpans)} />
+			<WaterfallChart
+				selectedRequestId={selectedRequest?.id}
+				data={spanNodesToTimingData(filteredSpans)}
+				onSpanClick={handleChartClick}
+			/>
 			<div className="relative flex-1 overflow-hidden">
 				<HttpRequestsTable data={requestData} onRowClick={handleRowClick} />
 
