@@ -89,7 +89,6 @@ export default function App() {
 		() => transformSpanTreeToTableData(filteredSpans),
 		[filteredSpans],
 	);
-	console.log(spans, filteredSpans, requestData);
 	const selectedRequest = useMemo(
 		() => requestData.find((request) => request.id === selectedRequestId),
 		[requestData, selectedRequestId],

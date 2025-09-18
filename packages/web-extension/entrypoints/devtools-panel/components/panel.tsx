@@ -8,6 +8,7 @@ import {
 	useState,
 } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
+import { useFocusTrap } from "../../../utils/dom";
 import { cn } from "../../../utils/style";
 import { formatDuration } from "../../../utils/time";
 import { CodeBlock } from "./code-block";
@@ -25,6 +26,8 @@ export interface SidePanelProps {
 	className?: string;
 	isLoading?: boolean;
 }
+
+const MIN_PANEL_WIDTH = 200;
 
 type TabType = "request" | "response" | "server-span";
 
@@ -407,8 +410,8 @@ function ServerSpanTab({
 	}
 
 	const duration =
-		serverSpanData.start && serverSpanData.end
-			? serverSpanData.end.end! - serverSpanData.start.start
+		serverSpanData.start && serverSpanData.end?.end
+			? serverSpanData.end.end - serverSpanData.start.start
 			: undefined;
 
 	return (
@@ -453,11 +456,11 @@ function ServerSpanTab({
 									},
 								]
 							: []),
-						...(serverSpanData.end
+						...(typeof serverSpanData.end?.end === "number"
 							? [
 									{
 										label: "End Time:",
-										value: new Date(serverSpanData.end.end!).toLocaleString(),
+										value: new Date(serverSpanData.end.end).toLocaleString(),
 										valueContainerClassName: "break-all",
 									},
 								]
@@ -532,11 +535,43 @@ export default function SidePanel({
 	const [activeTab, setActiveTab] = useState<TabType>(
 		serverSpanData ? "server-span" : "request",
 	);
-	const [panelWidth, setPanelWidth] = useState(400); // Default width in pixels
+	const [panelWidth, setPanelWidth] = useState(1000);
 	const [isResizing, setIsResizing] = useState(false);
 	const panelRef = useRef<HTMLDivElement>(null);
 	const closeButtonRef = useRef<HTMLButtonElement>(null);
 	const resizeHandleRef = useRef<HTMLButtonElement>(null);
+
+	useEffect(() => {
+		if (!isOpen) {
+			return;
+		}
+
+		const updateWidth = (containerWidth: number) => {
+			const maxWidth = Math.round(containerWidth - (containerWidth / 100) * 10);
+			setPanelWidth((prevWidth) => {
+				console.log(maxWidth, prevWidth);
+
+				return Math.min(prevWidth, maxWidth);
+			});
+		};
+
+		const observer = new ResizeObserver(([container]) => {
+			const containerWidth = container.contentRect.width;
+			updateWidth(containerWidth);
+		});
+
+		if (panelRef.current?.parentElement) {
+			observer.observe(panelRef.current.parentElement);
+			updateWidth(panelRef.current.parentElement.clientWidth);
+		}
+
+		return () => {
+			if (panelRef.current?.parentElement) {
+				observer.unobserve(panelRef.current.parentElement);
+			}
+			observer.disconnect();
+		};
+	}, [isOpen]);
 
 	// Reset active tab when entry changes
 	useEffect(() => {
@@ -587,69 +622,45 @@ export default function SidePanel({
 		}
 	}, [isOpen, onClose]);
 
-	// Focus trapping
-	useEffect(() => {
-		if (!isOpen || !panelRef.current) return;
-
-		const panel = panelRef.current;
-		const focusableElements = panel.querySelectorAll(
-			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-		);
-		const firstElement = focusableElements[0] as HTMLElement;
-		const lastElement = focusableElements[
-			focusableElements.length - 1
-		] as HTMLElement;
-
-		const handleTabKey = (event: KeyboardEvent) => {
-			if (event.key !== "Tab") return;
-
-			if (event.shiftKey) {
-				if (document.activeElement === firstElement) {
-					event.preventDefault();
-					lastElement?.focus();
-				}
-			} else {
-				if (document.activeElement === lastElement) {
-					event.preventDefault();
-					firstElement?.focus();
-				}
-			}
-		};
-
-		panel.addEventListener("keydown", handleTabKey);
-		return () => panel.removeEventListener("keydown", handleTabKey);
-	}, [isOpen]);
+	useFocusTrap(panelRef, { disabled: !isOpen });
 
 	const handleTabChange = (tab: TabType) => {
 		setActiveTab(tab);
 	};
 
 	// Resize functionality
-	const handleMouseDown = useCallback(
-		(event: React.MouseEvent) => {
-			event.preventDefault();
-			setIsResizing(true);
+	const handleMouseDown = useCallback((event: React.MouseEvent) => {
+		event.preventDefault();
+		setIsResizing(true);
+		const width = panelRef.current?.parentElement?.clientWidth ?? 0;
+		const maxWidth = width - (width / 100) * 10;
 
-			const startX = event.clientX;
-			const startWidth = panelWidth;
+		let prevX = event.clientX;
 
-			const handleMouseMove = (moveEvent: MouseEvent) => {
-				const deltaX = startX - moveEvent.clientX; // Reversed because we're dragging left edge
-				const newWidth = Math.max(300, Math.min(800, startWidth + deltaX)); // Min 300px, max 800px
-				setPanelWidth(newWidth);
-			};
+		const handleMouseMove = (moveEvent: MouseEvent) => {
+			const deltaX = prevX - moveEvent.clientX;
+			const panelWidth = panelRef.current?.clientWidth ?? 0;
 
-			const handleMouseUp = () => {
-				setIsResizing(false);
-				document.removeEventListener("mousemove", handleMouseMove);
-				document.removeEventListener("mouseup", handleMouseUp);
-			};
+			if (
+				deltaX === 0 ||
+				(panelWidth <= MIN_PANEL_WIDTH && deltaX < 0) ||
+				(panelWidth >= maxWidth && deltaX > 0)
+			) {
+				return;
+			}
+			prevX = moveEvent.clientX;
+			setPanelWidth((prevWidth) => prevWidth + deltaX);
+		};
 
-			document.addEventListener("mousemove", handleMouseMove);
-			document.addEventListener("mouseup", handleMouseUp);
-		},
-		[panelWidth],
-	);
+		const handleMouseUp = () => {
+			setIsResizing(false);
+			document.removeEventListener("mousemove", handleMouseMove);
+			document.removeEventListener("mouseup", handleMouseUp);
+		};
+
+		document.addEventListener("mousemove", handleMouseMove);
+		document.addEventListener("mouseup", handleMouseUp);
+	}, []);
 
 	// Prevent text selection during resize
 	useEffect(() => {
@@ -671,74 +682,71 @@ export default function SidePanel({
 
 	return (
 		<div
-			className="absolute left-15 right-0 top-0 bottom-0 inset-0 z-50 flex items-stretch justify-end"
-			role="dialog"
-			aria-labelledby="panel-title"
-		>
-			{/* Panel */}
-			<div
-				ref={panelRef}
-				className={`
-					relative bg-white border-l border-gray-600 shadow-2xl
-					h-full overflow-hidden flex
+			ref={panelRef}
+			className={`
+					absolute right-0 top-0 bottom-0 left-auto inset-0 z-50 items-stretch justify-end
+					bg-white border-l border-gray-600 shadow-2xl
+					h-full overflow-hidden flex max-w-11/12 min-w-60
 					transform transition-transform duration-300 ease-in-out
 					${isOpen ? "translate-x-0" : "translate-x-full"}
 					${className}
 				`}
-				style={{ width: `${panelWidth}px` }}
-			>
-				{/* Resize Handle */}
-				<button
-					ref={resizeHandleRef}
-					type="button"
-					className={`
+			style={{ width: `${panelWidth}px` }}
+			role="dialog"
+			aria-labelledby="panel-title"
+		>
+			{/* Resize Handle */}
+			<button
+				ref={resizeHandleRef}
+				type="button"
+				className={`
 						absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize z-10
 						hover:bg-primary/30 transition-colors border-none bg-transparent
 						focus:outline-none focus:bg-primary/40
 						${isResizing ? "bg-primary/50" : ""}
 					`}
-					onMouseDown={handleMouseDown}
-					title="Drag to resize panel"
-					aria-label="Resize panel"
-				/>
+				onMouseDown={handleMouseDown}
+				title="Drag to resize panel"
+				aria-label="Resize panel"
+			/>
 
-				{/* Panel Content */}
-				<div className="flex-1 flex flex-col min-w-0">
-					{/* Header */}
-					<div className="flex items-center justify-between p-4 border-b border-gray-600">
-						<h2 id="panel-title" className="text-lg font-semibold text-primary">
-							Request Details
-						</h2>
-						<button
-							ref={closeButtonRef}
-							type="button"
-							onClick={onClose}
-							className="p-2 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-							aria-label="Close panel"
-							title="Close panel"
+			{/* Panel Content */}
+			<div className="flex-1 flex flex-col min-w-0">
+				{/* Header */}
+				<div className="flex items-center justify-between p-4 border-b border-gray-600">
+					<h2 id="panel-title" className="text-lg font-semibold text-primary">
+						Request Details
+					</h2>
+					<button
+						ref={closeButtonRef}
+						type="button"
+						onClick={onClose}
+						className="p-2 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+						aria-label="Close panel"
+						title="Close panel"
+					>
+						<svg
+							className="w-5 h-5 text-gray-400"
+							fill="none"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth="2"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+							aria-hidden="true"
 						>
-							<svg
-								className="w-5 h-5 text-gray-400"
-								fill="none"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth="2"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-								aria-hidden="true"
-							>
-								<path d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
-					</div>
+							<path d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
 
-					{/* Tab Navigation */}
-					<div className="flex border-b border-gray-600">
-						{serverSpanData && (
-							<button
-								type="button"
-								onClick={() => handleTabChange("server-span")}
-								className={`
+				{/* Tab Navigation */}
+				<div className="flex border-b border-gray-600">
+					{serverSpanData && (
+						<button
+							type="button"
+							onClick={() => handleTabChange("server-span")}
+							className={`
 									flex-1 py-3 px-4 text-sm font-medium transition-colors
 									focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
 									${
@@ -747,17 +755,17 @@ export default function SidePanel({
 											: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
 									}
 								`}
-								role="tab"
-								aria-selected={activeTab === "server-span"}
-								aria-controls="server-span-panel"
-							>
-								Server Span
-							</button>
-						)}
-						<button
-							type="button"
-							onClick={() => handleTabChange("request")}
-							className={`
+							role="tab"
+							aria-selected={activeTab === "server-span"}
+							aria-controls="server-span-panel"
+						>
+							Server Span
+						</button>
+					)}
+					<button
+						type="button"
+						onClick={() => handleTabChange("request")}
+						className={`
 								flex-1 py-3 px-4 text-sm font-medium transition-colors
 								focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
 								${
@@ -766,20 +774,20 @@ export default function SidePanel({
 										: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
 								}
 							`}
-							role="tab"
-							aria-selected={activeTab === "request"}
-							aria-controls="request-panel"
-							disabled={!requestData}
-						>
-							Request
-							{!requestData && (
-								<span className="ml-1 text-xs text-gray-500">(N/A)</span>
-							)}
-						</button>
-						<button
-							type="button"
-							onClick={() => handleTabChange("response")}
-							className={`
+						role="tab"
+						aria-selected={activeTab === "request"}
+						aria-controls="request-panel"
+						disabled={!requestData}
+					>
+						Request
+						{!requestData && (
+							<span className="ml-1 text-xs text-gray-500">(N/A)</span>
+						)}
+					</button>
+					<button
+						type="button"
+						onClick={() => handleTabChange("response")}
+						className={`
 								flex-1 py-3 px-4 text-sm font-medium transition-colors
 								focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
 								${
@@ -788,60 +796,59 @@ export default function SidePanel({
 										: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
 								}
 							`}
-							role="tab"
-							aria-selected={activeTab === "response"}
-							aria-controls="response-panel"
-							disabled={!responseData}
-						>
-							Response
-							{!responseData && (
-								<span className="ml-1 text-xs text-gray-500">(N/A)</span>
-							)}
-						</button>
-					</div>
+						role="tab"
+						aria-selected={activeTab === "response"}
+						aria-controls="response-panel"
+						disabled={!responseData}
+					>
+						Response
+						{!responseData && (
+							<span className="ml-1 text-xs text-gray-500">(N/A)</span>
+						)}
+					</button>
+				</div>
 
-					{/* Tab Content */}
-					<div className="flex-1 overflow-auto">
-						<div className="p-4">
-							{isLoading ? (
-								<LoadingSkeleton />
-							) : (
-								<>
-									{serverSpanData && (
-										<div
-											id="server-span-panel"
-											role="tabpanel"
-											aria-labelledby="server-span-tab"
-											hidden={activeTab !== "server-span"}
-										>
-											{activeTab === "server-span" && (
-												<ServerSpanTab serverSpanData={serverSpanData} />
-											)}
-										</div>
+				{/* Tab Content */}
+				<div className="flex-1 overflow-auto">
+					<div className="p-4">
+						{isLoading ? (
+							<LoadingSkeleton />
+						) : (
+							<>
+								{serverSpanData && (
+									<div
+										id="server-span-panel"
+										role="tabpanel"
+										aria-labelledby="server-span-tab"
+										hidden={activeTab !== "server-span"}
+									>
+										{activeTab === "server-span" && (
+											<ServerSpanTab serverSpanData={serverSpanData} />
+										)}
+									</div>
+								)}
+								<div
+									id="request-panel"
+									role="tabpanel"
+									aria-labelledby="request-tab"
+									hidden={activeTab !== "request"}
+								>
+									{activeTab === "request" && (
+										<RequestTab requestData={requestData} />
 									)}
-									<div
-										id="request-panel"
-										role="tabpanel"
-										aria-labelledby="request-tab"
-										hidden={activeTab !== "request"}
-									>
-										{activeTab === "request" && (
-											<RequestTab requestData={requestData} />
-										)}
-									</div>
-									<div
-										id="response-panel"
-										role="tabpanel"
-										aria-labelledby="response-tab"
-										hidden={activeTab !== "response"}
-									>
-										{activeTab === "response" && (
-											<ResponseTab responseData={responseData} />
-										)}
-									</div>
-								</>
-							)}
-						</div>
+								</div>
+								<div
+									id="response-panel"
+									role="tabpanel"
+									aria-labelledby="response-tab"
+									hidden={activeTab !== "response"}
+								>
+									{activeTab === "response" && (
+										<ResponseTab responseData={responseData} />
+									)}
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 			</div>

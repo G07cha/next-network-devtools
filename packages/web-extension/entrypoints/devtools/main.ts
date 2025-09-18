@@ -60,7 +60,7 @@ async function createPanelWhenReady() {
 		);
 
 		try {
-			await browser.devtools.panels.create(
+			browser.devtools.panels.create(
 				"NextNetwork",
 				"icon/128.png",
 				"devtools-panel.html",
