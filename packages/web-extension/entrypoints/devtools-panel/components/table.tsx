@@ -266,7 +266,7 @@ export function HttpRequestsTable({
 
 	const handleRowClick = (
 		request: HttpRequestData,
-		event: React.MouseEvent,
+		event: React.MouseEvent<HTMLDivElement>,
 	) => {
 		event.preventDefault();
 		setSelectedRowId(request.id);
@@ -283,23 +283,14 @@ export function HttpRequestsTable({
 				event.preventDefault();
 				if (currentIndex < processedData.length - 1) {
 					setSelectedRowId(processedData[currentIndex + 1].id);
+					onRowClick?.(processedData[currentIndex + 1]);
 				}
 				break;
 			case "ArrowUp":
 				event.preventDefault();
 				if (currentIndex > 0) {
 					setSelectedRowId(processedData[currentIndex - 1].id);
-				}
-				break;
-			case "Enter":
-				event.preventDefault();
-				if (selectedRowId) {
-					const selectedRequest = processedData.find(
-						(item) => item.id === selectedRowId,
-					);
-					if (selectedRequest) {
-						onRowClick?.(selectedRequest);
-					}
+					onRowClick?.(processedData[currentIndex - 1]);
 				}
 				break;
 		}

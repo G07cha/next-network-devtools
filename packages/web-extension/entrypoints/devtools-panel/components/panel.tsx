@@ -8,10 +8,12 @@ import {
 	useState,
 } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
-import { useFocusTrap } from "../../../utils/dom";
 import { cn } from "../../../utils/style";
 import { formatDuration } from "../../../utils/time";
+import { assertType } from "../../../utils/type";
 import { CodeBlock } from "./code-block";
+import { CollapsibleSection } from "./collapsible-section";
+import { CloseIcon } from "./icons";
 
 export interface SidePanelProps {
 	requestData?: RequestSpan;
@@ -61,50 +63,6 @@ const PropertyList = ({
 		</div>
 	);
 };
-
-interface CollapsibleSectionProps {
-	title: string;
-	children: React.ReactNode;
-	defaultExpanded?: boolean;
-	badge?: string | number;
-}
-
-function CollapsibleSection({
-	title,
-	children,
-	defaultExpanded = true,
-	badge,
-}: CollapsibleSectionProps) {
-	const [expanded, setExpanded] = useState(defaultExpanded);
-
-	return (
-		<div className="mb-4">
-			<button
-				type="button"
-				onClick={() => setExpanded(!expanded)}
-				className="flex items-center justify-between w-full p-3 rounded-lg transition-colors"
-				aria-expanded={expanded}
-			>
-				<div className="flex items-center gap-2">
-					<span className="text-primary font-medium text-sm">
-						{expanded ? "▼" : "▶"}
-					</span>
-					<span className="font-medium text-sm">{title}</span>
-					{badge !== undefined && (
-						<span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs">
-							{badge}
-						</span>
-					)}
-				</div>
-			</button>
-			{expanded && (
-				<div className="mt-2 p-3 rounded-lg border border-gray-700">
-					{children}
-				</div>
-			)}
-		</div>
-	);
-}
 
 interface HeadersDisplayProps {
 	headers: Record<string, string>;
@@ -417,8 +375,9 @@ function ServerSpanTab({
 	return (
 		<div className="space-y-4">
 			{/* Server Span Status */}
+
 			<div className="p-4 rounded-lg border border-gray-600">
-				<div className="flex items-center justify-between mb-3">
+				<div className="flex flex-col gap-3 mb-3">
 					<div className="flex items-center gap-3">
 						<span
 							className={`px-3 py-1 rounded font-medium text-sm ${
@@ -429,15 +388,15 @@ function ServerSpanTab({
 						>
 							{serverSpanData.isActive ? "ACTIVE" : "COMPLETED"}
 						</span>
-						<span className="font-medium text-primary">
-							{serverSpanData.start?.id || "Unknown Server Span"}
-						</span>
+						{duration && (
+							<span className="text-gray-400 text-sm">
+								{formatDuration(duration)}
+							</span>
+						)}
 					</div>
-					{duration && (
-						<span className="text-gray-400 text-sm">
-							{formatDuration(duration)}
-						</span>
-					)}
+					<span className="font-medium text-primary text-sm">
+						{serverSpanData.start?.id || "Unknown Server Span"}
+					</span>
 				</div>
 			</div>
 
@@ -538,7 +497,6 @@ export default function SidePanel({
 	const [panelWidth, setPanelWidth] = useState(1000);
 	const [isResizing, setIsResizing] = useState(false);
 	const panelRef = useRef<HTMLDivElement>(null);
-	const closeButtonRef = useRef<HTMLButtonElement>(null);
 	const resizeHandleRef = useRef<HTMLButtonElement>(null);
 
 	useEffect(() => {
@@ -548,11 +506,7 @@ export default function SidePanel({
 
 		const updateWidth = (containerWidth: number) => {
 			const maxWidth = Math.round(containerWidth - (containerWidth / 100) * 10);
-			setPanelWidth((prevWidth) => {
-				console.log(maxWidth, prevWidth);
-
-				return Math.min(prevWidth, maxWidth);
-			});
+			setPanelWidth((prevWidth) => Math.min(prevWidth, maxWidth));
 		};
 
 		const observer = new ResizeObserver(([container]) => {
@@ -581,13 +535,6 @@ export default function SidePanel({
 			setActiveTab("request");
 		}
 	}, [serverSpanData]);
-
-	// Focus management
-	useEffect(() => {
-		if (isOpen && closeButtonRef.current) {
-			closeButtonRef.current.focus();
-		}
-	}, [isOpen]);
 
 	// Escape key handler
 	useEffect(() => {
@@ -621,8 +568,6 @@ export default function SidePanel({
 				document.removeEventListener("mousedown", handleClickOutside);
 		}
 	}, [isOpen, onClose]);
-
-	useFocusTrap(panelRef, { disabled: !isOpen });
 
 	const handleTabChange = (tab: TabType) => {
 		setActiveTab(tab);
@@ -712,36 +657,17 @@ export default function SidePanel({
 
 			{/* Panel Content */}
 			<div className="flex-1 flex flex-col min-w-0">
-				{/* Header */}
-				<div className="flex items-center justify-between p-4 border-b border-gray-600">
-					<h2 id="panel-title" className="text-lg font-semibold text-primary">
-						Request Details
-					</h2>
+				{/* Tab Navigation */}
+				<div className="flex border-b border-gray-600">
 					<button
-						ref={closeButtonRef}
 						type="button"
 						onClick={onClose}
-						className="p-2 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+						className="p-2 hover:text-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-gray-400"
 						aria-label="Close panel"
 						title="Close panel"
 					>
-						<svg
-							className="w-5 h-5 text-gray-400"
-							fill="none"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth="2"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-							aria-hidden="true"
-						>
-							<path d="M6 18L18 6M6 6l12 12" />
-						</svg>
+						<CloseIcon className="w-5 h-5" />
 					</button>
-				</div>
-
-				{/* Tab Navigation */}
-				<div className="flex border-b border-gray-600">
 					{serverSpanData && (
 						<button
 							type="button"
@@ -752,7 +678,7 @@ export default function SidePanel({
 									${
 										activeTab === "server-span"
 											? "text-primary border-b-2 border-primary bg-gray-800/50"
-											: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
+											: "text-gray-400 hover:text-gray-300 :bg-gray-800/30"
 									}
 								`}
 							role="tab"
@@ -771,7 +697,7 @@ export default function SidePanel({
 								${
 									activeTab === "request"
 										? "text-primary border-b-2 border-primary bg-gray-800/50"
-										: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
+										: "text-gray-400 not-disabled:hover:text-gray-300 not-disabled:hover:bg-gray-800/30"
 								}
 							`}
 						role="tab"
@@ -793,7 +719,7 @@ export default function SidePanel({
 								${
 									activeTab === "response"
 										? "text-primary border-b-2 border-primary bg-gray-800/50"
-										: "text-gray-400 hover:text-gray-300 hover:bg-gray-800/30"
+										: "text-gray-400 not-disabled:hover:text-gray-300 not-disabled:hover:bg-gray-800/30"
 								}
 							`}
 						role="tab"
@@ -814,40 +740,20 @@ export default function SidePanel({
 						{isLoading ? (
 							<LoadingSkeleton />
 						) : (
-							<>
-								{serverSpanData && (
-									<div
-										id="server-span-panel"
-										role="tabpanel"
-										aria-labelledby="server-span-tab"
-										hidden={activeTab !== "server-span"}
-									>
-										{activeTab === "server-span" && (
-											<ServerSpanTab serverSpanData={serverSpanData} />
-										)}
-									</div>
-								)}
-								<div
-									id="request-panel"
-									role="tabpanel"
-									aria-labelledby="request-tab"
-									hidden={activeTab !== "request"}
-								>
-									{activeTab === "request" && (
-										<RequestTab requestData={requestData} />
-									)}
-								</div>
-								<div
-									id="response-panel"
-									role="tabpanel"
-									aria-labelledby="response-tab"
-									hidden={activeTab !== "response"}
-								>
-									{activeTab === "response" && (
-										<ResponseTab responseData={responseData} />
-									)}
-								</div>
-							</>
+							<div role="tabpanel">
+								{(() => {
+									switch (activeTab) {
+										case "request":
+											return <RequestTab requestData={requestData} />;
+										case "response":
+											return <ResponseTab responseData={responseData} />;
+										case "server-span":
+											return <ServerSpanTab serverSpanData={serverSpanData} />;
+										default:
+											assertType<never>(activeTab);
+									}
+								})()}
+							</div>
 						)}
 					</div>
 				</div>
