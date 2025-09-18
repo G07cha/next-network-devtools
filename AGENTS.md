@@ -42,16 +42,15 @@ This is a monorepo using pnpm workspaces with the following packages:
 
 ### Next.js Plugin
 
-The plugin registers OpenTelemetry instrumentation for Node.js applications and starts a local server on port 3300 to serve spans and metrics. Key components:
+The plugin registers OpenTelemetry instrumentation for Node.js applications and starts a local server on port 3300 to serve spans and metrics to web extension. Key components:
 
-- `collector.ts` - Data collection logic
 - `interceptor.ts` - Request/response interception
 - `server.ts` - WebSocket server implementation
 - `types.ts` - TypeScript definitions
 
 ### Web Extension
 
-Built with WXT framework using React and TailwindCSS:
+Built with WXT framework using React and TailwindCSS and used in combination with next.js plugin:
 
 - DevTools panel integration for network monitoring
 - Background and content scripts for data collection

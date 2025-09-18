@@ -1,4 +1,5 @@
 import debounce from "debounce";
+import { defineContentScript } from "wxt/utils/define-content-script";
 import { ExtensionMessageType, sendMessage } from "../utils/messaging";
 import { detectNextjs } from "../utils/nextjs-detector";
 
