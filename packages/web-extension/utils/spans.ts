@@ -6,12 +6,6 @@ import type {
 } from "@/packages/types";
 import { assertType } from "./type";
 
-type AnySpan = RequestSpan | ResponseSpan | Span;
-
-const isRequestSpan = (span: AnySpan): span is RequestSpan => "url" in span;
-const isResponseSpan = (span: AnySpan): span is ResponseSpan =>
-	"status" in span;
-
 export type SpanNode = {
 	// Server span data (from span-start/span-end events)
 	serverSpan?: {
@@ -227,8 +221,9 @@ export const mapServerEventToSpanTree = (
 	return spanTree;
 };
 
-export const filterEmptySpans = (spanTree: SpanTree): SpanTree => {
+export const filterSpansWithoutChildren = (spanTree: SpanTree): SpanTree => {
 	const filtered: SpanTree = {};
+
 	const filterChildren = (children: SpanNode[]): SpanNode[] => {
 		return children
 			.filter(
@@ -248,4 +243,35 @@ export const filterEmptySpans = (spanTree: SpanTree): SpanTree => {
 	}
 
 	return filtered;
+};
+
+export const filterInBetweenSpans = (spanTree: SpanTree): SpanTree => {
+	const filtered: SpanTree = {};
+
+	const getLeafs = (
+		children: SpanNode[],
+		collectedChildren: SpanNode[] = [],
+	): SpanNode[] => {
+		return children.flatMap((child) =>
+			child.children.length > 0
+				? getLeafs(child.children, collectedChildren)
+				: child,
+		);
+	};
+
+	for (const [id, node] of Object.entries(spanTree)) {
+		if (node.children.length > 0) {
+			filtered[id] = { ...node, children: getLeafs(node.children) };
+		}
+	}
+
+	return filtered;
+};
+
+export const filterServerSpans = (spanTree: SpanTree): SpanTree => {
+	return Object.fromEntries(
+		Object.entries(spanTree).filter(([, value]) => {
+			return !value.isServerSpan;
+		}),
+	);
 };

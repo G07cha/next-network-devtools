@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type {
 	RequestSpan,
 	ResponseSpan,
@@ -6,7 +6,9 @@ import type {
 	Span,
 } from "@/packages/types";
 import {
-	filterEmptySpans,
+	filterInBetweenSpans,
+	filterServerSpans,
+	filterSpansWithoutChildren,
 	mapServerEventToSpanTree,
 	type SpanNode,
 	type SpanTree,
@@ -58,18 +60,12 @@ const createMockResponse = (
 });
 
 describe("mapServerEventToSpanTree", () => {
-	let spanTree: SpanTree;
-
-	beforeEach(() => {
-		spanTree = {};
-	});
-
 	describe("Basic Operations", () => {
 		it("adds a span-start event to an empty tree", () => {
 			const spanData = createMockSpan();
 			const event: ServerEvent = { type: "span-start", data: spanData };
 
-			const result = mapServerEventToSpanTree(event, spanTree);
+			const result = mapServerEventToSpanTree(event, {});
 
 			expect(result["span-1"]).toBeDefined();
 			expect(result["span-1"].isServerSpan).toBe(true);
@@ -82,7 +78,7 @@ describe("mapServerEventToSpanTree", () => {
 			const spanData = createMockSpan();
 			const event: ServerEvent = { type: "span-end", data: spanData };
 
-			const result = mapServerEventToSpanTree(event, spanTree);
+			const result = mapServerEventToSpanTree(event, {});
 
 			// span-end to empty tree doesn't create a new node - it only updates existing ones
 			expect(Object.keys(result)).toHaveLength(0);
@@ -92,7 +88,7 @@ describe("mapServerEventToSpanTree", () => {
 			const requestData = createMockRequest();
 			const event: ServerEvent = { type: "request", data: requestData };
 
-			const result = mapServerEventToSpanTree(event, spanTree);
+			const result = mapServerEventToSpanTree(event, {});
 
 			expect(result["req-1"]).toBeDefined();
 			expect(result["req-1"].isServerSpan).toBe(false);
@@ -104,7 +100,7 @@ describe("mapServerEventToSpanTree", () => {
 			const responseData = createMockResponse();
 			const event: ServerEvent = { type: "response", data: responseData };
 
-			const result = mapServerEventToSpanTree(event, spanTree);
+			const result = mapServerEventToSpanTree(event, {});
 
 			expect(result["req-1"]).toBeDefined();
 			expect(result["req-1"].isServerSpan).toBe(false);
@@ -122,7 +118,7 @@ describe("mapServerEventToSpanTree", () => {
 				data: { ...spanData, end: 3000 },
 			};
 
-			let result = mapServerEventToSpanTree(startEvent, spanTree);
+			let result = mapServerEventToSpanTree(startEvent, {});
 			result = mapServerEventToSpanTree(endEvent, result);
 
 			const node = result["span-1"];
@@ -136,7 +132,7 @@ describe("mapServerEventToSpanTree", () => {
 			const endEvent: ServerEvent = { type: "span-end", data: spanData };
 			const startEvent: ServerEvent = { type: "span-start", data: spanData };
 
-			let result = mapServerEventToSpanTree(endEvent, spanTree);
+			let result = mapServerEventToSpanTree(endEvent, {});
 			// span-end to empty tree doesn't create a node
 			expect(Object.keys(result)).toHaveLength(0);
 
@@ -162,7 +158,7 @@ describe("mapServerEventToSpanTree", () => {
 				data: responseData,
 			};
 
-			let result = mapServerEventToSpanTree(requestEvent, spanTree);
+			let result = mapServerEventToSpanTree(requestEvent, {});
 			result = mapServerEventToSpanTree(responseEvent, result);
 
 			const node = result["req-1"];
@@ -183,7 +179,7 @@ describe("mapServerEventToSpanTree", () => {
 				data: responseData,
 			};
 
-			let result = mapServerEventToSpanTree(responseEvent, spanTree);
+			let result = mapServerEventToSpanTree(responseEvent, {});
 			result = mapServerEventToSpanTree(requestEvent, result);
 
 			const node = result["req-1"];
@@ -211,7 +207,7 @@ describe("mapServerEventToSpanTree", () => {
 			};
 			const childEvent: ServerEvent = { type: "span-start", data: childSpan };
 
-			let result = mapServerEventToSpanTree(parentEvent, spanTree);
+			let result = mapServerEventToSpanTree(parentEvent, {});
 			result = mapServerEventToSpanTree(childEvent, result);
 
 			expect(result["parent-span"].children).toHaveLength(1);
@@ -236,7 +232,7 @@ describe("mapServerEventToSpanTree", () => {
 				data: parentSpan,
 			};
 
-			let result = mapServerEventToSpanTree(childEvent, spanTree);
+			let result = mapServerEventToSpanTree(childEvent, {});
 			result = mapServerEventToSpanTree(parentEvent, result);
 
 			expect(result["parent-span"].children).toHaveLength(1);
@@ -256,7 +252,7 @@ describe("mapServerEventToSpanTree", () => {
 			const spanEvent: ServerEvent = { type: "span-start", data: serverSpan };
 			const requestEvent: ServerEvent = { type: "request", data: request };
 
-			let result = mapServerEventToSpanTree(spanEvent, spanTree);
+			let result = mapServerEventToSpanTree(spanEvent, {});
 			result = mapServerEventToSpanTree(requestEvent, result);
 
 			expect(result["server-span"].children).toHaveLength(1);
@@ -276,7 +272,7 @@ describe("mapServerEventToSpanTree", () => {
 			const spanEvent: ServerEvent = { type: "span-start", data: serverSpan };
 			const responseEvent: ServerEvent = { type: "response", data: response };
 
-			let result = mapServerEventToSpanTree(spanEvent, spanTree);
+			let result = mapServerEventToSpanTree(spanEvent, {});
 			result = mapServerEventToSpanTree(responseEvent, result);
 
 			expect(result["server-span"].children).toHaveLength(1);
@@ -309,7 +305,7 @@ describe("mapServerEventToSpanTree", () => {
 				data: response,
 			};
 
-			let result = mapServerEventToSpanTree(spanEvent, spanTree);
+			let result = mapServerEventToSpanTree(spanEvent, {});
 			result = mapServerEventToSpanTree(requestEvent, result);
 			result = mapServerEventToSpanTree(responseEvent, result);
 
@@ -352,7 +348,7 @@ describe("mapServerEventToSpanTree", () => {
 				data: newRequest,
 			};
 
-			let result = mapServerEventToSpanTree(spanEvent, spanTree);
+			let result = mapServerEventToSpanTree(spanEvent, {});
 			result = mapServerEventToSpanTree(requestEvent, result);
 			result = mapServerEventToSpanTree(responseEvent, result);
 			result = mapServerEventToSpanTree(newRequestEvent, result);
@@ -377,7 +373,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: rootSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: middleSpan },
@@ -411,7 +407,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: parentSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: child1 },
@@ -434,7 +430,7 @@ describe("mapServerEventToSpanTree", () => {
 			const spanData = createMockSpan({ spanId: undefined });
 			const event: ServerEvent = { type: "span-start", data: spanData };
 
-			const result = mapServerEventToSpanTree(event, spanTree);
+			const result = mapServerEventToSpanTree(event, {});
 
 			expect(Object.keys(result)).toHaveLength(0);
 		});
@@ -448,7 +444,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			const result = mapServerEventToSpanTree(
 				{ type: "span-start", data: orphanSpan },
-				spanTree,
+				{},
 			);
 
 			expect(result["orphan"]).toBeDefined();
@@ -466,7 +462,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: parentSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: childSpan },
@@ -485,7 +481,7 @@ describe("mapServerEventToSpanTree", () => {
 			const spanData = createMockSpan({ spanId: "nonexistent" });
 			const event: ServerEvent = { type: "span-end", data: spanData };
 
-			const result = mapServerEventToSpanTree(event, spanTree);
+			const result = mapServerEventToSpanTree(event, {});
 
 			expect(Object.keys(result)).toHaveLength(0);
 		});
@@ -497,7 +493,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			const result = mapServerEventToSpanTree(
 				{ type: "request", data: request },
-				spanTree,
+				{},
 			);
 
 			expect(result["req-1"]).toBeDefined();
@@ -509,7 +505,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			const result = mapServerEventToSpanTree(
 				{ type: "request", data: request },
-				spanTree,
+				{},
 			);
 
 			expect(result["req-1"]).toBeDefined();
@@ -527,7 +523,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: existingSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: newSpan },
@@ -549,7 +545,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: parentSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: childSpan },
@@ -594,7 +590,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: rootSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: childSpan },
@@ -663,7 +659,7 @@ describe("mapServerEventToSpanTree", () => {
 				},
 			];
 
-			let result = spanTree;
+			let result: SpanTree = {};
 			events.forEach((event) => {
 				result = mapServerEventToSpanTree(event, result);
 			});
@@ -692,7 +688,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: parentSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: childSpan },
@@ -711,7 +707,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: serverSpan },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "request", data: request },
@@ -737,7 +733,7 @@ describe("mapServerEventToSpanTree", () => {
 
 			let result = mapServerEventToSpanTree(
 				{ type: "span-start", data: span1 },
-				spanTree,
+				{},
 			);
 			result = mapServerEventToSpanTree(
 				{ type: "span-start", data: span2 },
@@ -775,7 +771,7 @@ describe("filterEmptySpans", () => {
 		};
 
 		expect(
-			filterEmptySpans({
+			filterSpansWithoutChildren({
 				requestResponseSpan,
 				emptySpan,
 				spanWithChildren,
@@ -787,5 +783,130 @@ describe("filterEmptySpans", () => {
 				children: [requestResponseSpan],
 			},
 		});
+	});
+});
+
+describe("filterInBetweenChildren", () => {
+	it("should remove the in-between nodes and return top spans with bottommost children", () => {
+		const rootSpan = createMockSpan({ spanId: "root", id: "root" });
+
+		// An in-between span that should be removed
+		const inBetweenSpan = createMockSpan({
+			spanId: "in-between-span",
+			id: "in-between-span",
+			parentSpan: { spanId: rootSpan.id, traceId: "trace-1" },
+		});
+
+		const childSpan = createMockSpan({
+			spanId: "child",
+			id: "child",
+			parentSpan: { spanId: inBetweenSpan.id, traceId: "trace-1" },
+		});
+
+		// Request within child span
+		const request = createMockRequest({
+			id: "api-call",
+			spanId: "child",
+		});
+
+		// Response for the request
+		const response = createMockResponse({
+			id: "api-call",
+			spanId: "child",
+		});
+
+		let result = mapServerEventToSpanTree(
+			{ type: "span-start", data: rootSpan },
+			{},
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-start", data: inBetweenSpan },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-start", data: childSpan },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "request", data: request },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "response", data: response },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-end", data: childSpan },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-end", data: inBetweenSpan },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-end", data: rootSpan },
+			result,
+		);
+
+		const filteredTree = filterInBetweenSpans(result);
+
+		// Checking if root's child is now the child span
+		expect(filteredTree["root"].children[0].spanId).toEqual(childSpan.id);
+		expect(filteredTree["root"].children[0].children.length).toBe(0);
+	});
+});
+
+describe("filterServerSpans", () => {
+	it("removes all server spans from the tree leaving only the ones with requests", () => {
+		const rootSpan = createMockSpan({ spanId: "root", id: "root" });
+
+		const childSpan = createMockSpan({
+			spanId: "child",
+			id: "child",
+			parentSpan: { spanId: "root", traceId: "trace-1" },
+		});
+
+		// Request within child span
+		const request = createMockRequest({
+			id: "api-call",
+			spanId: "child",
+		});
+
+		// Response for the request
+		const response = createMockResponse({
+			id: "api-call",
+			spanId: "child",
+		});
+
+		let result = mapServerEventToSpanTree(
+			{ type: "span-start", data: rootSpan },
+			{},
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-start", data: childSpan },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "request", data: request },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "response", data: response },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-end", data: childSpan },
+			result,
+		);
+		result = mapServerEventToSpanTree(
+			{ type: "span-end", data: rootSpan },
+			result,
+		);
+
+		const filteredTree = filterServerSpans(result);
+
+		expect(filteredTree["root"]).toBeUndefined();
+		expect(filteredTree["child"]).toBeUndefined();
+		expect(filteredTree[request.id]).not.toBeUndefined();
 	});
 });

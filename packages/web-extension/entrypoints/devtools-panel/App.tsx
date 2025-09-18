@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import {
-	filterEmptySpans,
+	filterInBetweenSpans,
+	filterServerSpans,
+	filterSpansWithoutChildren,
 	mapServerEventToSpanTree,
 	type SpanTree,
 } from "../../utils/spans";
@@ -17,12 +19,19 @@ import WaterfallChart, {
 
 const WS_URL = "ws://localhost:3300/";
 
+enum SpanFilter {
+	ALL = "All",
+	ROOT_SPANS = "Condensed",
+	REQUESTS_ONLY = "Requests",
+}
+
 export default function App() {
 	const [spans, setSpans] = useState<SpanTree>({});
 	const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
 		null,
 	);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
+	const [spanFilter, setSpanFilter] = useState(SpanFilter.ROOT_SPANS);
 	const { send, status: wsStatus } = useWS(WS_URL, (event) => {
 		setSpans((prev) => {
 			const newSpans = mapServerEventToSpanTree(event, prev);
@@ -51,7 +60,17 @@ export default function App() {
 		setIsPanelOpen(false);
 	};
 
-	const filteredSpans = useMemo(() => filterEmptySpans(spans), [spans]);
+	const filteredSpans = useMemo(() => {
+		switch (spanFilter) {
+			case SpanFilter.ALL:
+				return spans;
+			case SpanFilter.ROOT_SPANS:
+				return filterInBetweenSpans(filterSpansWithoutChildren(spans));
+			case SpanFilter.REQUESTS_ONLY:
+				return filterServerSpans(spans);
+		}
+	}, [spans, spanFilter]);
+
 	const requestData = useMemo(
 		() => transformSpanTreeToTableData(filteredSpans),
 		[filteredSpans],
@@ -71,14 +90,29 @@ export default function App() {
 	return (
 		<div className="flex flex-col h-full overflow-hidden">
 			<div className="flex items-center justify-between p-3">
-				<button
-					type="button"
-					onClick={handleClearData}
-					className="px-4 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-					title="Clear all recorded requests and spans"
-				>
-					Clear All
-				</button>
+				<div className="flex gap-3">
+					<button
+						type="button"
+						onClick={handleClearData}
+						className="px-4 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+						title="Clear all recorded requests and spans"
+					>
+						Clear All
+					</button>
+					<select
+						className="border p-2 border-gray-300 rounded"
+						name="Span filter"
+						onChange={(event) =>
+							setSpanFilter(event.currentTarget.value as SpanFilter)
+						}
+					>
+						{Object.values(SpanFilter).map((value) => (
+							<option value={value} selected={spanFilter === value} key={value}>
+								{value}
+							</option>
+						))}
+					</select>
+				</div>
 
 				<ConnectionBanner status={wsStatus} />
 			</div>
