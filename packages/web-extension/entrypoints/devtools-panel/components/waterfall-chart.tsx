@@ -98,8 +98,14 @@ export function WaterfallChart({
 	rowHeight = 4,
 	padding = 8,
 }: WaterfallChartProps) {
-	const minTime = useMemo(() => Math.min(...data.map((d) => d.start)), [data]);
-	const maxTime = useMemo(() => Math.max(...data.map((d) => d.end)), [data]);
+	const minTime = useMemo(
+		() => Math.floor(Math.min(...data.map((d) => d.start))),
+		[data],
+	);
+	const maxTime = useMemo(
+		() => Math.ceil(Math.max(...data.map((d) => d.end))),
+		[data],
+	);
 	const timeRange = 10 ** `${maxTime - minTime}`.length;
 
 	const positionedData = useMemo(() => {
