@@ -420,7 +420,7 @@ export function HttpRequestsTable({
 			{/* Table Body */}
 			<div
 				ref={tableRef}
-				style={{ height: virtualScrolling ? `${VIEWPORT_HEIGHT}px` : "100%" }}
+				style={{ height: virtualScrolling ? `${VIEWPORT_HEIGHT}px` : "auto" }}
 				onScroll={virtualScrolling ? handleScroll : undefined}
 			>
 				{virtualScrolling && (
