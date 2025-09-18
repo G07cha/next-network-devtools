@@ -268,7 +268,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 					</div>
 					{responseTime && (
 						<span className="text-gray-400 text-sm">
-							{formatDuration(responseTime)}ms
+							{formatDuration(responseTime)}
 						</span>
 					)}
 				</div>
@@ -313,7 +313,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 						<div className="flex justify-between">
 							<span className="text-gray-400">Response Time:</span>
 							<span className="font-mono text-gray-300">
-								{formatDuration(responseTime)}ms
+								{formatDuration(responseTime)}
 							</span>
 						</div>
 					)}
