@@ -11,7 +11,7 @@ export const createInterceptor = () => {
 	] as const;
 
 	const interceptor = new BatchInterceptor({
-		name: "my-interceptor",
+		name: "next-network-interceptor",
 		interceptors: interceptors,
 	});
 

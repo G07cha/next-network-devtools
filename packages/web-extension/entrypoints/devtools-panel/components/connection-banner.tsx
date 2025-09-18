@@ -1,11 +1,5 @@
 import { useMemo } from "react";
-
-export enum ConnectionStatus {
-	Connecting = "connecting",
-	Connected = "connected",
-	Disconnected = "disconnected",
-	Error = "error",
-}
+import { ConnectionStatus } from "../../../utils/ws";
 
 export function ConnectionBanner({ status }: { status: ConnectionStatus }) {
 	const colorClass = useMemo(() => {

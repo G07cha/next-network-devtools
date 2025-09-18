@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ServerEvent } from "@/packages/types";
+import { useMemo, useState } from "react";
 import {
 	filterEmptySpans,
 	mapServerEventToSpanTree,
 	type SpanTree,
 } from "../../utils/spans";
-import {
-	ConnectionBanner,
-	ConnectionStatus,
-} from "./components/connection-banner";
+import { useWS } from "../../utils/ws";
+import { ConnectionBanner } from "./components/connection-banner";
 import SidePanel from "./components/panel";
 import HttpRequestsTable, {
 	type HttpRequestData,
@@ -22,51 +19,17 @@ const WS_URL = "ws://localhost:3300/";
 
 export default function App() {
 	const [spans, setSpans] = useState<SpanTree>({});
-	const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(
-		ConnectionStatus.Connecting,
-	);
 	const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
 		null,
 	);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
-	const wsRef = useRef<WebSocket | null>(null);
+	const { send, status: wsStatus } = useWS(WS_URL, (event) => {
+		setSpans((prev) => {
+			const newSpans = mapServerEventToSpanTree(event, prev);
 
-	useEffect(() => {
-		let ws: WebSocket;
-		let reconnectTimer: NodeJS.Timeout | null = null;
-
-		function connect() {
-			setConnectionStatus(ConnectionStatus.Connecting);
-			ws = new window.WebSocket(WS_URL);
-			wsRef.current = ws;
-
-			ws.onopen = () => setConnectionStatus(ConnectionStatus.Connected);
-			ws.onclose = () => {
-				setConnectionStatus(ConnectionStatus.Disconnected);
-				reconnectTimer = setTimeout(connect, 2000);
-			};
-			ws.onerror = () => setConnectionStatus(ConnectionStatus.Error);
-
-			ws.onmessage = (event) => {
-				try {
-					const parsedEvent = JSON.parse(event.data) as ServerEvent;
-					setSpans((prev) => {
-						const newSpans = mapServerEventToSpanTree(parsedEvent, prev);
-
-						return { ...newSpans };
-					});
-				} catch (e) {
-					console.error("Error parsing WebSocket message:", e);
-				}
-			};
-		}
-
-		connect();
-		return () => {
-			wsRef.current?.close();
-			if (reconnectTimer) clearTimeout(reconnectTimer);
-		};
-	}, []);
+			return { ...newSpans };
+		});
+	});
 
 	const handleRowClick = (request: HttpRequestData) => {
 		setSelectedRequestId(request.id);
@@ -79,6 +42,10 @@ export default function App() {
 	};
 
 	const handleClearData = () => {
+		send({
+			type: "clear-all",
+			data: undefined,
+		});
 		setSpans({});
 		setSelectedRequestId(null);
 		setIsPanelOpen(false);
@@ -113,7 +80,7 @@ export default function App() {
 					Clear All
 				</button>
 
-				<ConnectionBanner status={connectionStatus} />
+				<ConnectionBanner status={wsStatus} />
 			</div>
 			<WaterfallChart data={spanNodesToTimingData(filteredSpans)} />
 			<div className="relative flex-1 overflow-hidden">

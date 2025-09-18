@@ -6,6 +6,12 @@ import type {
 } from "@/packages/types";
 import { assertType } from "./type";
 
+type AnySpan = RequestSpan | ResponseSpan | Span;
+
+const isRequestSpan = (span: AnySpan): span is RequestSpan => "url" in span;
+const isResponseSpan = (span: AnySpan): span is ResponseSpan =>
+	"status" in span;
+
 export type SpanNode = {
 	// Server span data (from span-start/span-end events)
 	serverSpan?: {
@@ -207,6 +213,12 @@ export const mapServerEventToSpanTree = (
 					}
 				}
 			}
+			break;
+		case "catch-up":
+			spanTree = data.reduce(
+				(prevTree, event) => mapServerEventToSpanTree(event, prevTree),
+				spanTree,
+			);
 			break;
 		default:
 			assertType<never>(type);

@@ -4,20 +4,22 @@ import type {
 	ReadableSpan,
 	SpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
-import { parse } from "url";
 import { type WebSocket, WebSocketServer } from "ws";
-import type { ServerEvent } from "@/packages/types";
+import type {
+	BroadcastedServerEvents,
+	CatchUpEvent,
+	ClientEvent,
+} from "@/packages/types";
 import { createInterceptor } from "./interceptor";
 import { hrTimeToMilliseconds } from "./utils";
 
 // Key is requestID
 const requestTimings = new Map<string, { startMs: number }>();
 const spans = new Map<string, ReadableSpan>();
+let sentEvents: BroadcastedServerEvents[] = [];
 
 export const createServer = (spanProcessor: SpanProcessor) => {
 	const server = createHttpServer((req, res) => {
-		const { pathname } = parse(req.url || "", true);
-
 		// Set CORS headers
 		res.setHeader("Access-Control-Allow-Origin", "*");
 		res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -27,28 +29,6 @@ export const createServer = (spanProcessor: SpanProcessor) => {
 		if (req.method === "OPTIONS") {
 			res.writeHead(200);
 			res.end();
-			return;
-		}
-
-		if (req.method === "GET" && pathname === "/spans") {
-			res.writeHead(200);
-			const serializableSpans = Array.from(spans.values())
-				// Filter out unrelated spans
-				.filter(
-					(span) =>
-						typeof span.attributes["http.url"] !== "string" ||
-						(!span.attributes["http.url"].startsWith("http://localhost:3300") &&
-							!span.attributes["http.url"].includes("/_next/")),
-				)
-				.map((span) => ({
-					name: span.name,
-					startTime: span.startTime,
-					endTime: span.endTime,
-					attributes: span.attributes,
-					spanContext: span.spanContext(),
-					// Add more fields as needed, avoiding circular references
-				}));
-			res.end(JSON.stringify(serializableSpans));
 			return;
 		}
 
@@ -64,12 +44,34 @@ export const createServer = (spanProcessor: SpanProcessor) => {
 	wss.on("connection", (ws: WebSocket) => {
 		clients.add(ws);
 
+		const catchUpEvent: CatchUpEvent = {
+			type: "catch-up",
+			data: sentEvents,
+		};
+
+		ws.send(JSON.stringify(catchUpEvent));
+
+		ws.on("message", (data) => {
+			let event: ClientEvent | undefined;
+			try {
+				event = JSON.parse(data.toString()) as ClientEvent;
+			} catch (error) {
+				console.error("Unknown message received", error);
+				return;
+			}
+
+			if (event.type === "clear-all") {
+				sentEvents = [];
+			}
+		});
+
 		ws.on("close", () => {
 			clients.delete(ws);
 		});
 	});
 
-	function broadcast(event: ServerEvent) {
+	function broadcast(event: BroadcastedServerEvents) {
+		sentEvents.push(event);
 		const message = JSON.stringify(event);
 		for (const ws of clients) {
 			if (ws.readyState === ws.OPEN) {
@@ -86,6 +88,7 @@ export const createServer = (spanProcessor: SpanProcessor) => {
 
 	spanProcessor.onStart = (span) => {
 		spans.set(span.spanContext().spanId, span);
+
 		broadcast({
 			type: "span-start",
 			data: {

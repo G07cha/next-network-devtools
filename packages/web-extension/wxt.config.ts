@@ -11,6 +11,7 @@ export default defineConfig({
 			// Drop "@" aliases as they are used to reference other packages
 			delete wxt.config.alias["@"];
 			delete wxt.config.alias["@@"];
+			delete wxt.config.alias["~"];
 		},
 	},
 	imports: false,
