@@ -80,6 +80,10 @@ export default function App() {
 		() => transformSpanTreeToTableData(filteredSpans),
 		[filteredSpans],
 	);
+	const chartData = useMemo(
+		() => spanNodesToTimingData(filteredSpans),
+		[filteredSpans],
+	);
 	const selectedRequest = useMemo(
 		() => requestData.find((request) => request.id === selectedRequestId),
 		[requestData, selectedRequestId],
@@ -123,7 +127,7 @@ export default function App() {
 			</div>
 			<WaterfallChart
 				selectedRequestId={selectedRequest?.id}
-				data={spanNodesToTimingData(filteredSpans)}
+				data={chartData}
 				onSpanClick={handleChartClick}
 			/>
 			<div className="relative flex-1 overflow-hidden">

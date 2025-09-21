@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { SpanTree } from "../../../utils/spans";
+import type { SpanNode, SpanTree } from "../../../utils/spans";
 import { cn } from "../../../utils/style";
 import { formatDuration } from "../../../utils/time";
 
@@ -30,58 +30,52 @@ interface PositionedTiming extends TimingData {
 
 // Utility function to convert span nodes to timing data
 export function spanNodesToTimingData(spans: SpanTree): TimingData[] {
-	return Object.entries(spans)
-		.filter(([_, node]) => {
-			// Include server spans with timing data
-			if (node.isServerSpan && node.serverSpan?.start && node.serverSpan?.end) {
-				return true;
-			}
-			// Include request/response pairs with timing data
-			if (node.request?.start && node.response?.end) {
-				return true;
-			}
-			return false;
-		})
-		.map(([id, node]) => {
-			// Handle server spans
-			if (
-				node.isServerSpan &&
-				node.serverSpan?.start &&
-				node.serverSpan?.end?.end
-			) {
-				return {
-					id,
+	const processNode = (node: SpanNode): TimingData[] => {
+		let nodes: TimingData[] = [];
+		if (node.children.length > 0) {
+			nodes = node.children.flatMap((child) => processNode(child));
+		}
+
+		if (
+			node.isServerSpan &&
+			node.serverSpan?.start &&
+			node.serverSpan?.end?.end
+		) {
+			return [
+				...nodes,
+				{
+					id: node.spanId || "unknown",
 					start: node.serverSpan.start.start,
 					end: node.serverSpan.end.end,
 					method: "SERVER",
 					url: node.serverSpan.start.id || "Server Span",
 					status: undefined,
 					label: `Server: ${node.serverSpan.start.id || "Unknown"}`,
-				};
-			}
-			// Handle request/response pairs
-			else if (node.request && node.response?.end) {
-				return {
-					id,
+				},
+			];
+		} else if (node.request && node.response?.end) {
+			return [
+				...nodes,
+				{
+					id: node.request.id || "unknown",
 					start: node.request.start,
 					end: node.response.end,
 					method: node.request.method,
 					url: node.request.url,
 					status: node.response?.status,
 					label: `${node.request.method} ${node.request.url}`,
-				};
-			}
-			// Fallback (shouldn't reach here due to filter)
-			return {
-				id,
-				start: 0,
-				end: 0,
-				method: "UNKNOWN",
-				url: "Unknown",
-				status: undefined,
-				label: "Unknown",
-			};
-		});
+				},
+			];
+		}
+		return nodes;
+	};
+
+	const rootNodes = Object.values(spans).filter((node) => {
+		const parentId = node.parentSpanId;
+		return !parentId || !spans[parentId];
+	});
+
+	return rootNodes.flatMap((node) => processNode(node));
 }
 
 export function WaterfallChart({

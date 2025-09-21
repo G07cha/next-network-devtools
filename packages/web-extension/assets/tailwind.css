@@ -70,8 +70,8 @@
 	/* Success Colors */
 	--color-success: #54bc4a;
 	--color-success-light: #68cc5c;
-	--color-success-bg: rgb(84 188 74 / 0.1);
-	--color-success-bg-hover: rgb(84 188 74 / 0.2);
+	--color-success-bg: rgb(84 188 74 / 0.8);
+	--color-success-bg-hover: rgb(84 188 74);
 	--color-success-border: rgb(84 188 74 / 0.3);
 
 	/* Info Colors */
