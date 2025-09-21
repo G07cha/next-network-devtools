@@ -1,6 +1,6 @@
 {
 	"name": "next-network",
-	"description": "manifest.json description",
+	"description": "Real-time Network Monitoring for Next.js",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
