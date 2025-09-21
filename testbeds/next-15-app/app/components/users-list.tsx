@@ -13,7 +13,6 @@ interface UsersListProps {
 export default function UsersList({ initialData }: UsersListProps) {
 	const { data, error, isLoading } = useSwr<User[]>("/api/users", fetcher, {
 		fallbackData: initialData,
-		refreshInterval: 5000, // Refresh every 5 seconds for real-time updates
 	});
 
 	if (error) return <div>Failed to load users</div>;
