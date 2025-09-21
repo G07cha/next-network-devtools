@@ -6,7 +6,8 @@
 	"scripts": {
 		"linter:fix": "pnpm exec biome check --write",
 		"linter:check": "pnpm exec biome check",
-		"dev": "pnpm -r --parallel --if-present dev"
+		"dev": "pnpm -r --parallel --if-present dev",
+		"test": "pnpm -r --parallel --if-present test"
 	},
 	"author": "G07cha",
 	"license": "MIT",
