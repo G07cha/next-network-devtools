@@ -11,6 +11,7 @@ import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
 import { cn } from "../../../utils/style";
 import { formatDuration } from "../../../utils/time";
 import { assertType } from "../../../utils/type";
+import { Card } from "./card";
 import { CodeBlock } from "./code-block";
 import { CollapsibleSection } from "./collapsible-section";
 import { CloseIcon } from "./icons";
@@ -74,20 +75,25 @@ function HeadersDisplay({ headers, title }: HeadersDisplayProps) {
 
 	if (headerEntries.length === 0) {
 		return (
-			<div className="text-gray-400 text-sm italic">
+			<Card className="text-gray-400 text-sm italic">
 				No {title.toLowerCase()}
-			</div>
+			</Card>
 		);
 	}
 
 	return (
-		<PropertyList
-			data={headerEntries.map(([key, value]) => ({
-				label: key,
-				value,
-				valueContainerClassName: "break-all",
-			}))}
-		/>
+		<>
+			<h3 className="text-sm font-medium mb-2">{title}</h3>
+			<Card>
+				<PropertyList
+					data={headerEntries.map(([key, value]) => ({
+						label: key,
+						value,
+						valueContainerClassName: "break-all",
+					}))}
+				/>
+			</Card>
+		</>
 	);
 }
 
@@ -137,7 +143,7 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 	return (
 		<div className="space-y-4">
 			{/* Method and URL */}
-			<div className="p-4 rounded-lg border border-gray-600">
+			<Card>
 				<div className="flex items-center gap-3 mb-3">
 					<span
 						className={`px-3 py-1 rounded font-medium text-sm ${getMethodColor(requestData.method)}`}
@@ -151,64 +157,23 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 				<div className="font-mono text-sm text-primary break-all">
 					{requestData.url}
 				</div>
-			</div>
+			</Card>
 
 			{/* Query Parameters */}
 			{Object.keys(queryParams).length > 0 && (
-				<CollapsibleSection
-					title="Query Parameters"
-					badge={Object.keys(queryParams).length}
-				>
-					<HeadersDisplay headers={queryParams} title="Query Parameters" />
-				</CollapsibleSection>
+				<HeadersDisplay headers={queryParams} title="Query Parameters" />
 			)}
 
-			{/* Request Headers */}
-			<CollapsibleSection
-				title="Request Headers"
-				badge={Object.keys(requestData.headers || {}).length}
-			>
-				<HeadersDisplay headers={requestData.headers} title="Request Headers" />
-			</CollapsibleSection>
+			<HeadersDisplay headers={requestData.headers} title="Headers" />
 
-			{/* Request Body */}
 			{requestData.body && (
-				<CollapsibleSection title="Request Body">
-					<CodeBlock content={requestData.body} />
-				</CollapsibleSection>
+				<>
+					<h3 className="text-sm font-medium mb-2">Body</h3>
+					<Card>
+						<CodeBlock content={requestData.body} />
+					</Card>
+				</>
 			)}
-
-			{/* Metadata */}
-			<CollapsibleSection title="Metadata" defaultExpanded={false}>
-				<PropertyList
-					data={[
-						{
-							label: "Span ID:",
-							value: requestData.spanId,
-							valueContainerClassName: "break-all",
-						},
-						{
-							label: "Trace ID:",
-							value: requestData.traceId,
-							valueContainerClassName: "break-all",
-						},
-						{
-							label: "Request ID:",
-							value: requestData.id,
-							valueContainerClassName: "break-all",
-						},
-						...(requestData.parentSpan
-							? [
-									{
-										label: "Parent Span:",
-										value: requestData.parentSpan?.spanId,
-										valueContainerClassName: "break-all",
-									},
-								]
-							: []),
-					]}
-				/>
-			</CollapsibleSection>
 		</div>
 	);
 }
@@ -252,7 +217,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 	return (
 		<div className="space-y-4">
 			{/* Status and Basic Info */}
-			<div className="p-4 rounded-lg border border-gray-600">
+			<Card>
 				<div className="flex items-center justify-between mb-3">
 					<div className="flex items-center gap-3">
 						<span
@@ -286,28 +251,20 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 						</div>
 					)}
 				</div>
-			</div>
+			</Card>
 
-			{/* Response Headers */}
-			<CollapsibleSection
-				title="Response Headers"
-				badge={Object.keys(responseData.headers || {}).length}
-			>
-				<HeadersDisplay
-					headers={responseData.headers}
-					title="Response Headers"
-				/>
-			</CollapsibleSection>
+			<HeadersDisplay headers={responseData.headers} title="Headers" />
 
-			{/* Response Body */}
 			{responseData.body && (
-				<CollapsibleSection title="Response Body">
-					<CodeBlock content={responseData.body} />
-				</CollapsibleSection>
+				<>
+					<h3 className="text-sm font-medium mb-2">Body</h3>
+					<Card>
+						<CodeBlock content={responseData.body} />
+					</Card>
+				</>
 			)}
 
-			{/* Timing & Metadata */}
-			<CollapsibleSection title="Timing & Metadata" defaultExpanded={false}>
+			<CollapsibleSection title="Timing" defaultExpanded={false}>
 				<div className="space-y-2 text-sm">
 					{responseTime && (
 						<div className="flex justify-between">
@@ -331,18 +288,6 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 							</span>
 						</div>
 					)}
-					<div className="flex justify-between">
-						<span className="text-gray-400">Span ID:</span>
-						<span className="font-mono text-gray-300">
-							{responseData.spanId}
-						</span>
-					</div>
-					<div className="flex justify-between">
-						<span className="text-gray-400">Trace ID:</span>
-						<span className="font-mono text-gray-300">
-							{responseData.traceId}
-						</span>
-					</div>
 				</div>
 			</CollapsibleSection>
 		</div>
@@ -376,29 +321,27 @@ function ServerSpanTab({
 		<div className="space-y-4">
 			{/* Server Span Status */}
 
-			<div className="p-4 rounded-lg border border-gray-600">
-				<div className="flex flex-col gap-3 mb-3">
-					<div className="flex items-center gap-3">
-						<span
-							className={`px-3 py-1 rounded font-medium text-sm ${
-								serverSpanData.isActive
-									? "bg-warning/20 text-warning"
-									: "bg-primary/20 text-primary"
-							}`}
-						>
-							{serverSpanData.isActive ? "ACTIVE" : "COMPLETED"}
-						</span>
-						{duration && (
-							<span className="text-gray-400 text-sm">
-								{formatDuration(duration)}
-							</span>
-						)}
-					</div>
-					<span className="font-medium text-primary text-sm">
-						{serverSpanData.start?.id || "Unknown Server Span"}
+			<Card className="flex flex-col gap-3 mb-3">
+				<div className="flex items-center gap-3">
+					<span
+						className={`px-3 py-1 rounded font-medium text-sm ${
+							serverSpanData.isActive
+								? "bg-warning/20 text-warning"
+								: "bg-primary/20 text-primary"
+						}`}
+					>
+						{serverSpanData.isActive ? "ACTIVE" : "COMPLETED"}
 					</span>
+					{duration && (
+						<span className="text-gray-400 text-sm">
+							{formatDuration(duration)}
+						</span>
+					)}
 				</div>
-			</div>
+				<span className="font-medium text-primary text-sm">
+					{serverSpanData.start?.id || "Unknown Server Span"}
+				</span>
+			</Card>
 
 			{/* Timing Information */}
 			<CollapsibleSection title="Timing Information" defaultExpanded={true}>
@@ -436,48 +379,6 @@ function ServerSpanTab({
 					]}
 				/>
 			</CollapsibleSection>
-
-			{/* Server Span Metadata */}
-			<CollapsibleSection title="Server Span Metadata" defaultExpanded={false}>
-				<PropertyList
-					data={[
-						...(serverSpanData.start
-							? [
-									{
-										label: "Span ID:",
-										value: serverSpanData.start.spanId,
-										valueContainerClassName: "break-all",
-									},
-									{
-										label: "Trace ID:",
-										value: serverSpanData.start.traceId,
-										valueContainerClassName: "break-all",
-									},
-									...(serverSpanData.start.parentSpan
-										? [
-												{
-													label: "Parent Span:",
-													value: serverSpanData.start.parentSpan.spanId,
-													valueContainerClassName: "break-all",
-												},
-											]
-										: []),
-								]
-							: []),
-					]}
-				/>
-			</CollapsibleSection>
-		</div>
-	);
-}
-
-function LoadingSkeleton() {
-	return (
-		<div className="space-y-4 animate-pulse">
-			<div className="h-20 bg-gray-800 rounded-lg" />
-			<div className="h-32 bg-gray-800 rounded-lg" />
-			<div className="h-24 bg-gray-800 rounded-lg" />
-			<div className="h-40 bg-gray-800 rounded-lg" />
 		</div>
 	);
 }
@@ -489,7 +390,6 @@ export default function SidePanel({
 	isOpen,
 	onClose,
 	className = "",
-	isLoading = false,
 }: SidePanelProps) {
 	const [activeTab, setActiveTab] = useState<TabType>(
 		serverSpanData ? "server-span" : "request",
@@ -735,27 +635,19 @@ export default function SidePanel({
 				</div>
 
 				{/* Tab Content */}
-				<div className="flex-1 overflow-auto">
-					<div className="p-4">
-						{isLoading ? (
-							<LoadingSkeleton />
-						) : (
-							<div role="tabpanel">
-								{(() => {
-									switch (activeTab) {
-										case "request":
-											return <RequestTab requestData={requestData} />;
-										case "response":
-											return <ResponseTab responseData={responseData} />;
-										case "server-span":
-											return <ServerSpanTab serverSpanData={serverSpanData} />;
-										default:
-											assertType<never>(activeTab);
-									}
-								})()}
-							</div>
-						)}
-					</div>
+				<div className="flex-1 overflow-auto p-4" role="tabpanel">
+					{(() => {
+						switch (activeTab) {
+							case "request":
+								return <RequestTab requestData={requestData} />;
+							case "response":
+								return <ResponseTab responseData={responseData} />;
+							case "server-span":
+								return <ServerSpanTab serverSpanData={serverSpanData} />;
+							default:
+								assertType<never>(activeTab);
+						}
+					})()}
 				</div>
 			</div>
 		</div>

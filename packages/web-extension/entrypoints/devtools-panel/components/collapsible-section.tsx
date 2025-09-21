@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Card } from "./card";
 
 interface CollapsibleSectionProps {
 	title: string;
@@ -6,11 +7,11 @@ interface CollapsibleSectionProps {
 	defaultExpanded?: boolean;
 	badge?: string | number;
 }
+
 export function CollapsibleSection({
 	title,
 	children,
 	defaultExpanded = true,
-	badge,
 }: CollapsibleSectionProps) {
 	const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -27,18 +28,9 @@ export function CollapsibleSection({
 						{expanded ? "▼" : "▶"}
 					</span>
 					<span className="font-medium text-sm">{title}</span>
-					{badge !== undefined && (
-						<span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs">
-							{badge}
-						</span>
-					)}
 				</div>
 			</button>
-			{expanded && (
-				<div className="mt-2 p-3 rounded-lg border border-gray-700">
-					{children}
-				</div>
-			)}
+			{expanded && <Card className="mt-2">{children}</Card>}
 		</div>
 	);
 }

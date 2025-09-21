@@ -25,7 +25,7 @@ export function CodeBlock({
 
 	return (
 		<pre
-			className="p-4 rounded-lg text-sm font-mono overflow-auto text-primary border border-gray-600"
+			className="text-sm font-mono overflow-auto text-primary"
 			style={{ maxHeight }}
 		>
 			{formattedContent}
