@@ -6,8 +6,8 @@ import {
 	isDetectionMessage,
 	isDevToolsQueryMessage,
 	sendMessageToTab,
-} from "../utils/messaging";
-import type { NextjsDetectionResult } from "../utils/nextjs-detector";
+} from "~/utils/messaging";
+import type { NextjsDetectionResult } from "~/utils/nextjs-detector";
 
 interface TabState {
 	detectionResult: NextjsDetectionResult | null;

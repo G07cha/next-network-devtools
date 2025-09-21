@@ -1,4 +1,4 @@
-import { cn } from "../../../utils/style";
+import { cn } from "~/utils/style";
 
 export interface CardProps {
 	children: React.ReactNode;

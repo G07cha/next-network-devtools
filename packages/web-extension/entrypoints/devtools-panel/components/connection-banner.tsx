@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ConnectionStatus } from "../../../utils/ws";
+import { ConnectionStatus } from "~/utils/ws";
 
 export function ConnectionBanner({ status }: { status: ConnectionStatus }) {
 	const colorClass = useMemo(() => {

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import type { SpanNode, SpanTree } from "../../../utils/spans";
-import { cn } from "../../../utils/style";
-import { formatDuration } from "../../../utils/time";
+import type { SpanNode, SpanTree } from "~/utils/spans";
+import { cn } from "~/utils/style";
+import { formatDuration } from "~/utils/time";
 
 interface TimingData {
 	id: string;

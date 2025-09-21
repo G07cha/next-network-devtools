@@ -8,9 +8,9 @@ import {
 	useState,
 } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
-import { cn } from "../../../utils/style";
-import { formatDuration } from "../../../utils/time";
-import { assertType } from "../../../utils/type";
+import { cn } from "~/utils/style";
+import { formatDuration } from "~/utils/time";
+import { assertType } from "~/utils/type";
 import { Card } from "./card";
 import { CodeBlock } from "./code-block";
 import { CollapsibleSection } from "./collapsible-section";

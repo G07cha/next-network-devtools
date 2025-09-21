@@ -5,8 +5,8 @@ import {
 	filterSpansWithoutChildren,
 	mapServerEventToSpanTree,
 	type SpanTree,
-} from "../../utils/spans";
-import { useWS } from "../../utils/ws";
+} from "~/utils/spans";
+import { useWS } from "~/utils/ws";
 import { ConnectionBanner } from "./components/connection-banner";
 import SidePanel from "./components/panel";
 import HttpRequestsTable, {

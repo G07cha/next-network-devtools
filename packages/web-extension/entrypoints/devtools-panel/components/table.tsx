@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
-import type { SpanTree } from "../../../utils/spans";
-import { cn } from "../../../utils/style";
-import { formatDuration } from "../../../utils/time";
+import type { SpanTree } from "~/utils/spans";
+import { cn } from "~/utils/style";
+import { formatDuration } from "~/utils/time";
 
 type SpanNode = {
 	// Server span data (from span-start/span-end events)
@@ -158,11 +158,8 @@ export function transformSpanTreeToTableData(
 		}
 	}
 
-	// Convert SpanTree (Record) to array of nodes for processing
-	const nodes = Object.values(spanTree);
-
 	// Find root nodes (nodes without parents or with parents not in the current tree)
-	const rootNodes = nodes.filter((node) => {
+	const rootNodes = Object.values(spanTree).filter((node) => {
 		const parentId = node.parentSpanId;
 		return !parentId || !spanTree[parentId];
 	});

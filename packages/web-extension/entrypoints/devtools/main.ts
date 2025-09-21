@@ -3,7 +3,7 @@ import {
 	ExtensionMessageType,
 	isDevToolsResponseMessage,
 	sendMessage,
-} from "../../utils/messaging";
+} from "~/utils/messaging";
 
 let panelCreated = false;
 
