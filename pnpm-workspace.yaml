@@ -1,3 +1,7 @@
 packages:
-  - 'packages/*'
-  - 'testbeds/*'
+  - packages/*
+  - testbeds/*
+
+overrides:
+  next-network: link:packages/nextjs-plugin
+  nextjs-plugin: link:packages/nextjs-plugin

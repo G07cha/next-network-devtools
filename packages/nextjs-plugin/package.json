@@ -1,15 +1,43 @@
 {
-	"name": "nextjs-plugin",
+	"name": "next-network",
 	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"devDependencies": {
-		"@tsconfig/node24": "^24.0.1",
-		"@types/ws": "^8.18.1"
+	"description": "Next.js instrumentation plugin for end-to-end network tracking and monitoring",
+	"keywords": [
+		"nextjs",
+		"network",
+		"monitoring",
+		"instrumentation",
+		"opentelemetry",
+		"devtools",
+		"tracing"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/G07cha/next-network-devtools.git"
+	},
+	"bugs": {
+		"url": "https://github.com/G07cha/next-network-devtools/issues"
+	},
+	"homepage": "https://github.com/G07cha/next-network-devtools/tree/main/packages/nextjs-plugin#readme",
+	"author": "G07cha",
+	"license": "MIT",
+	"main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist/**/*"
+	],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"prepublishOnly": "pnpm build"
 	},
 	"dependencies": {
 		"@mswjs/interceptors": "^0.39.6",
@@ -18,5 +46,15 @@
 		"@opentelemetry/sdk-node": "^0.203.0",
 		"@opentelemetry/sdk-trace-node": "^2.0.1",
 		"ws": "^8.18.3"
+	},
+	"peerDependencies": {
+		"next": "15 || 14"
+	},
+	"devDependencies": {
+		"@tsconfig/node24": "^24.0.1",
+		"@types/ws": "^8.18.1",
+		"next": "^15.3",
+		"tsup": "^8.5.0",
+		"typescript": "^5.0.0"
 	}
 }

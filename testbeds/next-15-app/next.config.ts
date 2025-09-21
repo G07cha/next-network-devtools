@@ -1,26 +1,6 @@
 import type { NextConfig } from "next";
+import { withNextNetwork } from "next-network";
 
-const nextConfig: NextConfig = {
-	webpack(config) {
-		config.ignoreWarnings = [
-			...(config.ignoreWarnings ?? []),
-			(warning, { requestShortener }) => {
-				const isOtelModule =
-					!!warning.module &&
-					/@opentelemetry\/instrumentation/.test(
-						warning.module.readableIdentifier(requestShortener),
-					);
-
-				const isCriticalDependencyMessage = /Critical dependency/.test(
-					warning.message,
-				);
-
-				return isOtelModule && isCriticalDependencyMessage;
-			},
-		];
-
-		return config;
-	},
-};
+const nextConfig: NextConfig = withNextNetwork({});
 
 module.exports = nextConfig;

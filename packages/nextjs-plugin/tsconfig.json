@@ -1,3 +1,13 @@
 {
-	"extends": ["@tsconfig/node24/tsconfig.json", "../../tsconfig.base.json"]
+	"extends": ["@tsconfig/node24/tsconfig.json"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"composite": false,
+		"incremental": false
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist"]
 }
