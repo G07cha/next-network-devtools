@@ -384,12 +384,12 @@ describe("mapServerEventToSpanTree", () => {
 				result,
 			);
 
-			expect(result["root"].children).toHaveLength(1);
-			expect(result["middle"].children).toHaveLength(1);
-			expect(result["leaf"].children).toHaveLength(0);
+			expect(result[rootSpan.id].children).toHaveLength(1);
+			expect(result[middleSpan.id].children).toHaveLength(1);
+			expect(result[leafSpan.id].children).toHaveLength(0);
 
-			expect(result["root"].children[0].spanId).toBe("middle");
-			expect(result["middle"].children[0].spanId).toBe("leaf");
+			expect(result[rootSpan.id].children[0].spanId).toBe("middle");
+			expect(result[middleSpan.id].children[0].spanId).toBe("leaf");
 		});
 
 		it("handles multiple siblings", () => {
@@ -418,8 +418,8 @@ describe("mapServerEventToSpanTree", () => {
 				result,
 			);
 
-			expect(result["parent"].children).toHaveLength(2);
-			const childIds = result["parent"].children.map((c) => c.spanId);
+			expect(result[parentSpan.id].children).toHaveLength(2);
+			const childIds = result[parentSpan.id].children.map((c) => c.spanId);
 			expect(childIds).toContain("child1");
 			expect(childIds).toContain("child2");
 		});
@@ -447,9 +447,9 @@ describe("mapServerEventToSpanTree", () => {
 				{},
 			);
 
-			expect(result["orphan"]).toBeDefined();
-			expect(result["orphan"].parentSpanId).toBe("nonexistent");
-			expect(result["orphan"].children).toEqual([]);
+			expect(result[orphanSpan.id]).toBeDefined();
+			expect(result[orphanSpan.id].parentSpanId).toBe("nonexistent");
+			expect(result[orphanSpan.id].children).toEqual([]);
 		});
 
 		it("prevents duplicate children", () => {
@@ -474,7 +474,7 @@ describe("mapServerEventToSpanTree", () => {
 				result,
 			);
 
-			expect(result["parent"].children).toHaveLength(1);
+			expect(result[parentSpan.id].children).toHaveLength(1);
 		});
 
 		it("handles span-end for nonexistent span", () => {
@@ -531,8 +531,8 @@ describe("mapServerEventToSpanTree", () => {
 			);
 
 			expect(Object.keys(result)).toHaveLength(2);
-			expect(result["existing"]).toBeDefined();
-			expect(result["new"]).toBeDefined();
+			expect(result[existingSpan.id]).toBeDefined();
+			expect(result[newSpan.id]).toBeDefined();
 		});
 
 		it("updates existing node without losing children", () => {
@@ -559,8 +559,8 @@ describe("mapServerEventToSpanTree", () => {
 				result,
 			);
 
-			expect(result["parent"].children).toHaveLength(1);
-			expect(result["parent"].serverSpan?.end).toBeDefined();
+			expect(result[parentSpan.id].children).toHaveLength(1);
+			expect(result[parentSpan.id].serverSpan?.end).toBeDefined();
 		});
 	});
 
@@ -614,48 +614,48 @@ describe("mapServerEventToSpanTree", () => {
 			);
 
 			// Validate structure
-			expect(result["root"].children).toHaveLength(1);
-			expect(result["child"].children).toHaveLength(1);
-			expect(result["root"].children[0].children).toHaveLength(1);
+			expect(result[rootSpan.id].children).toHaveLength(1);
+			expect(result[childSpan.id].children).toHaveLength(1);
+			expect(result[rootSpan.id].children[0].children).toHaveLength(1);
 
-			const requestNode = result["child"].children[0];
+			const requestNode = result[childSpan.id].children[0];
 			expect(requestNode.request?.id).toBe("api-call");
 			expect(requestNode.response?.id).toBe("api-call");
 
 			// Validate span states
-			expect(result["root"].serverSpan?.isActive).toBe(false);
-			expect(result["child"].serverSpan?.isActive).toBe(false);
+			expect(result[rootSpan.id].serverSpan?.isActive).toBe(false);
+			expect(result[childSpan.id].serverSpan?.isActive).toBe(false);
 		});
 
 		it("handles mixed event ordering", () => {
 			const events: ServerEvent[] = [
 				{
 					type: "request",
-					data: createMockRequest({ id: "req1", spanId: "span1" }),
+					data: createMockRequest({ id: "req-1", spanId: "span-1" }),
 				},
 				{
 					type: "span-end",
-					data: createMockSpan({ spanId: "span2", id: "span2" }),
+					data: createMockSpan({ spanId: "span-2", id: "span-2" }),
 				},
 				{
 					type: "span-start",
-					data: createMockSpan({ spanId: "span1", id: "span1" }),
+					data: createMockSpan({ spanId: "span-1", id: "span-1" }),
 				},
 				{
 					type: "response",
-					data: createMockResponse({ id: "req1", spanId: "span1" }),
+					data: createMockResponse({ id: "req-1", spanId: "span-1" }),
 				},
 				{
 					type: "span-start",
 					data: createMockSpan({
-						spanId: "span2",
-						id: "span2",
-						parentSpan: { spanId: "span1", traceId: "trace-1" },
+						spanId: "span-2",
+						id: "span-2",
+						parentSpan: { spanId: "span-1", traceId: "trace-1" },
 					}),
 				},
 				{
 					type: "span-end",
-					data: createMockSpan({ spanId: "span1", id: "span1" }),
+					data: createMockSpan({ spanId: "span-1", id: "span-1" }),
 				},
 			];
 
@@ -665,12 +665,12 @@ describe("mapServerEventToSpanTree", () => {
 			});
 
 			// Validate final structure
-			expect(result["span1"].children).toHaveLength(2); // span2 and req1
-			expect(result["span1"].serverSpan?.isActive).toBe(false);
-			expect(result["span2"].serverSpan?.isActive).toBe(false);
+			expect(result["span-1"].children).toHaveLength(2); // span2 and req1
+			expect(result["span-1"].serverSpan?.isActive).toBe(false);
+			expect(result["span-2"].serverSpan?.isActive).toBe(false);
 
-			const requestNode = result["span1"].children.find(
-				(c) => c.request?.id === "req1",
+			const requestNode = result["span-1"].children.find(
+				(c) => c.request?.id === "req-1",
 			);
 			expect(requestNode?.request).toBeDefined();
 			expect(requestNode?.response).toBeDefined();
@@ -695,10 +695,10 @@ describe("mapServerEventToSpanTree", () => {
 				result,
 			);
 
-			expect(result["parent"].spanId).toBe("parent");
-			expect(result["parent"].parentSpanId).toBeUndefined();
-			expect(result["child"].spanId).toBe("child");
-			expect(result["child"].parentSpanId).toBe("parent");
+			expect(result[parentSpan.id].spanId).toBe("parent");
+			expect(result[parentSpan.id].parentSpanId).toBeUndefined();
+			expect(result[childSpan.id].spanId).toBe("child");
+			expect(result[childSpan.id].parentSpanId).toBe("parent");
 		});
 
 		it("maintains isServerSpan flags correctly", () => {
@@ -714,8 +714,8 @@ describe("mapServerEventToSpanTree", () => {
 				result,
 			);
 
-			expect(result["server"].isServerSpan).toBe(true);
-			expect(result["req"].isServerSpan).toBe(false);
+			expect(result[serverSpan.id].isServerSpan).toBe(true);
+			expect(result[request.id].isServerSpan).toBe(false);
 		});
 
 		it("prevents circular references", () => {
@@ -742,8 +742,8 @@ describe("mapServerEventToSpanTree", () => {
 
 			// Should not create infinite loops - each span should only appear once in the tree
 			expect(Object.keys(result)).toHaveLength(2);
-			expect(result["span1"].parentSpanId).toBe("span2");
-			expect(result["span2"].parentSpanId).toBe("span1");
+			expect(result[span1.id].parentSpanId).toBe("span2");
+			expect(result[span2.id].parentSpanId).toBe("span1");
 		});
 	});
 });
@@ -851,8 +851,8 @@ describe("filterInBetweenChildren", () => {
 		const filteredTree = filterInBetweenSpans(result);
 
 		// Checking if root's child is now the child span
-		expect(filteredTree["root"].children[0].spanId).toEqual(childSpan.id);
-		expect(filteredTree["root"].children[0].children.length).toBe(0);
+		expect(filteredTree[rootSpan.id].children[0].spanId).toEqual(childSpan.id);
+		expect(filteredTree[rootSpan.id].children[0].children.length).toBe(0);
 	});
 });
 
@@ -905,8 +905,8 @@ describe("filterServerSpans", () => {
 
 		const filteredTree = filterServerSpans(result);
 
-		expect(filteredTree["root"]).toBeUndefined();
-		expect(filteredTree["child"]).toBeUndefined();
+		expect(filteredTree[rootSpan.id]).toBeUndefined();
+		expect(filteredTree[childSpan.id]).toBeUndefined();
 		expect(filteredTree[request.id]).not.toBeUndefined();
 	});
 });

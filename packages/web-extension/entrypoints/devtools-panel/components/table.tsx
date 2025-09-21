@@ -247,7 +247,7 @@ export function HttpRequestsTable({
 		// 	}
 		// 	return true;
 		// });
-	}, [data, sortState, groupState, sortData]);
+	}, [data, sortState, sortData]);
 
 	const handleSort = (column: SortColumn) => {
 		setSortState((prev) => ({
@@ -365,6 +365,7 @@ export function HttpRequestsTable({
 	}
 
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: regular table just ain't going to cut it here with virtual scrolling
 		<div
 			className={cn(
 				"border-t-2 h-full border-primary overflow-auto",
@@ -428,6 +429,8 @@ export function HttpRequestsTable({
 					}
 				>
 					{visibleItems.map((request) => (
+						// biome-ignore lint/a11y/noStaticElementInteractions: easier to manage styling with div instead of button
+						// biome-ignore lint/a11y/useKeyWithClickEvents: covered by onKeyDown at table level
 						<div
 							key={request.id}
 							className={cn(
@@ -437,6 +440,7 @@ export function HttpRequestsTable({
 									: "",
 							)}
 							onClick={(e) => handleRowClick(request, e)}
+							// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
 							tabIndex={0}
 							style={{
 								...(virtualScrolling ? { height: `${ITEM_HEIGHT}px` } : {}),

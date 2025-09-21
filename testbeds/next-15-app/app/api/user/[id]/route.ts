@@ -8,14 +8,11 @@ const users: User[] = [
 	{ id: 3, name: "Bob Johnson" },
 ];
 
-export async function GET(
-	request: Request,
-	{ params }: { params: { id: string } },
-) {
+export async function GET(_: Request, { params }: { params: { id: string } }) {
 	try {
 		const userId = parseInt(params.id);
 
-		if (isNaN(userId)) {
+		if (Number.isNaN(userId)) {
 			return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
 		}
 
@@ -47,7 +44,7 @@ export async function PUT(
 	try {
 		const userId = parseInt(params.id);
 
-		if (isNaN(userId)) {
+		if (Number.isNaN(userId)) {
 			return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
 		}
 

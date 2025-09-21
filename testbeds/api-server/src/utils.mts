@@ -85,7 +85,6 @@ export function generateResponseBody(
 			return generateXmlContent(targetSize);
 		case "html":
 			return generateHtmlContent(targetSize);
-		case "text":
 		default:
 			return generateTextContent(targetSize);
 	}
@@ -138,7 +137,7 @@ function generateXmlContent(size?: number): string {
 </response>`;
 
 	return size && size > baseContent.length
-		? baseContent + `\n<!-- ${"x".repeat(size - baseContent.length - 10)} -->`
+		? `${baseContent}\n<!-- ${"x".repeat(size - baseContent.length - 10)} -->`
 		: baseContent;
 }
 
@@ -171,13 +170,13 @@ Status: success
 Generated ID: ${Math.floor(Math.random() * 1000)}`;
 
 	return size && size > baseContent.length
-		? baseContent + "\n" + "x".repeat(size - baseContent.length - 1)
+		? `${baseContent}\n${"x".repeat(size - baseContent.length - 1)}`
 		: baseContent;
 }
 
 function padContent(content: string, targetSize: number): string {
 	if (content.length >= targetSize) return content;
-	return content + "\n" + "x".repeat(targetSize - content.length - 1);
+	return `${content}\n${"x".repeat(targetSize - content.length - 1)}`;
 }
 
 export function getContentTypeHeader(contentType: ContentType): string {
@@ -188,7 +187,6 @@ export function getContentTypeHeader(contentType: ContentType): string {
 			return "application/xml";
 		case "html":
 			return "text/html";
-		case "text":
 		default:
 			return "text/plain";
 	}

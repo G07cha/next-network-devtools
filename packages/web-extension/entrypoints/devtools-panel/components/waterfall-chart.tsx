@@ -44,11 +44,15 @@ export function spanNodesToTimingData(spans: SpanTree): TimingData[] {
 		})
 		.map(([id, node]) => {
 			// Handle server spans
-			if (node.isServerSpan && node.serverSpan?.start && node.serverSpan?.end) {
+			if (
+				node.isServerSpan &&
+				node.serverSpan?.start &&
+				node.serverSpan?.end?.end
+			) {
 				return {
 					id,
 					start: node.serverSpan.start.start,
-					end: node.serverSpan.end.end!,
+					end: node.serverSpan.end.end,
 					method: "SERVER",
 					url: node.serverSpan.start.id || "Server Span",
 					status: undefined,

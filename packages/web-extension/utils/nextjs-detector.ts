@@ -59,7 +59,7 @@ export function detectNextjs(): NextjsDetectionResult {
 				isDevelopment = true;
 				confidence = "high";
 			}
-		} catch (e) {
+		} catch {
 			// Invalid JSON, but still indicates Next.js
 			indicators.push("__NEXT_DATA__");
 			isNextjs = true;
