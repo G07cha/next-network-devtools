@@ -1,6 +1,6 @@
 {
-	"name": "next-network",
-	"version": "1.0.0",
+	"name": "next-network-devtools-plugin",
+	"version": "1.0.1",
 	"description": "Next.js instrumentation plugin for end-to-end network tracking and monitoring",
 	"keywords": [
 		"nextjs",
@@ -13,7 +13,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/G07cha/next-network-devtools.git"
+		"url": "git+https://github.com/G07cha/next-network-devtools.git"
 	},
 	"bugs": {
 		"url": "https://github.com/G07cha/next-network-devtools/issues"

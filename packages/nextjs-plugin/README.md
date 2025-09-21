@@ -5,11 +5,11 @@ A required component to be able to use [Next Network Devtools browser extension]
 ## Installation
 
 ```bash
-npm install next-network
+npm install next-network-devtools-plugin
 # or
-yarn add next-network
+yarn add next-network-devtools-plugin
 # or
-pnpm add next-network
+pnpm add next-network-devtools-plugin
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ pnpm add next-network
 In your `next.config.js` file, add the plugin:
 
 ```js
-import { withNextNetwork } from 'next-network';
+import { withNextNetwork } from 'next-network-devtools-plugin';
 
 const nextConfig = withNextNetwork({
  // your existing next.js config
@@ -34,7 +34,7 @@ export async function register() {
    process.env.NEXT_RUNTIME === "nodejs" &&
    process.env.NODE_ENV === "development"
   ) {
-   await import("next-network").then(({ register }) => {
+   await import("next-network-devtools-plugin").then(({ register }) => {
     register();
    });
   }

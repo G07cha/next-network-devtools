@@ -16,6 +16,6 @@
 		"@biomejs/biome": "2.1.4"
 	},
 	"dependencies": {
-		"next-network": "link:packages/nextjs-plugin"
+		"next-network-devtools-plugin": "link:packages/nextjs-plugin"
 	}
 }

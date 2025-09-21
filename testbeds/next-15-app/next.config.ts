@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { withNextNetwork } from "next-network";
+import { withNextNetwork } from "next-network-devtools-plugin";
 
 const nextConfig: NextConfig = withNextNetwork({});
 

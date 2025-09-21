@@ -5,14 +5,13 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  nextjs-plugin: link:packages/nextjs-plugin
-  next-network: link:packages/nextjs-plugin
+  next-network-devtools-plugin: link:packages/nextjs-plugin
 
 importers:
 
   .:
     dependencies:
-      next-network:
+      next-network-devtools-plugin:
         specifier: link:packages/nextjs-plugin
         version: link:packages/nextjs-plugin
     devDependencies:
@@ -115,8 +114,8 @@ importers:
         specifier: ^15.5.2
         version: 15.5.2(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-network:
-        specifier: link:../../packages/nextjs-plugin
-        version: link:../../packages/nextjs-plugin
+        specifier: link:packages/nextjs-plugin
+        version: link:packages/nextjs-plugin
       react:
         specifier: ^18.2.0
         version: 18.3.1

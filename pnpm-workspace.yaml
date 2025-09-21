@@ -3,5 +3,4 @@ packages:
   - testbeds/*
 
 overrides:
-  next-network: link:packages/nextjs-plugin
-  nextjs-plugin: link:packages/nextjs-plugin
+  next-network-devtools-plugin: link:packages/nextjs-plugin
