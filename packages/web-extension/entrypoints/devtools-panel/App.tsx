@@ -31,8 +31,13 @@ export default function App() {
 		null,
 	);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
+	const [catchUpReceived, setCatchUpReceived] = useState(false);
 	const [spanFilter, setSpanFilter] = useState(SpanFilter.ROOT_SPANS);
 	const { send, status: wsStatus } = useWS(WS_URL, (event) => {
+		if (event.type === "catch-up") {
+			setCatchUpReceived(true);
+		}
+
 		setSpans((prev) => {
 			const newSpans = mapServerEventToSpanTree(event, prev);
 
@@ -131,7 +136,11 @@ export default function App() {
 				onSpanClick={handleChartClick}
 			/>
 			<div className="relative flex-1 overflow-hidden">
-				<HttpRequestsTable data={requestData} onRowClick={handleRowClick} />
+				<HttpRequestsTable
+					data={requestData}
+					onRowClick={handleRowClick}
+					loading={!catchUpReceived && requestData.length === 0}
+				/>
 
 				<SidePanel
 					requestData={selectedRequest?.request}

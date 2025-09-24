@@ -46,7 +46,6 @@ export interface TableProps {
 	loading?: boolean;
 	error?: string;
 	onRowClick?: (request: HttpRequestData) => void;
-	virtualScrolling?: boolean;
 	className?: string;
 }
 
@@ -58,9 +57,6 @@ interface SortState {
 interface GroupState {
 	[groupId: string]: boolean;
 }
-
-const ITEM_HEIGHT = 48;
-const VIEWPORT_HEIGHT = 400;
 
 export function transformSpanTreeToTableData(
 	spanTree: SpanTree,
@@ -176,7 +172,6 @@ export function HttpRequestsTable({
 	loading = false,
 	error,
 	onRowClick,
-	virtualScrolling = false,
 	className = "",
 }: TableProps) {
 	const [sortState, setSortState] = useState<SortState>({
@@ -186,7 +181,6 @@ export function HttpRequestsTable({
 	const [groupState, setGroupState] = useState<GroupState>({});
 	const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 	const tableRef = useRef<HTMLDivElement>(null);
-	const [scrollTop, setScrollTop] = useState(0);
 
 	const truncateUrl = (url: string, maxLength = 50) => {
 		if (url.length <= maxLength) return url;
@@ -305,25 +299,6 @@ export function HttpRequestsTable({
 		);
 	};
 
-	const visibleItems = useMemo(() => {
-		if (!virtualScrolling) return processedData;
-
-		const startIndex = Math.floor(scrollTop / ITEM_HEIGHT);
-		const endIndex = Math.min(
-			startIndex + Math.ceil(VIEWPORT_HEIGHT / ITEM_HEIGHT) + 1,
-			processedData.length,
-		);
-
-		return processedData.slice(startIndex, endIndex).map((item, index) => ({
-			...item,
-			virtualIndex: startIndex + index,
-		}));
-	}, [processedData, scrollTop, virtualScrolling]);
-
-	const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-		setScrollTop(event.currentTarget.scrollTop);
-	};
-
 	if (error) {
 		return (
 			<div className="flex h-full items-center justify-center text-error border-t-2 border-primary">
@@ -377,7 +352,7 @@ export function HttpRequestsTable({
 				<div className="grid grid-cols-12 gap-4 text-sm font-medium text-secondary">
 					<button
 						type="button"
-						className="col-span-5 text-left transition-colors flex items-center gap-1"
+						className="col-span-6 text-left transition-colors flex items-center gap-1"
 						onClick={() => handleSort("url")}
 					>
 						URL {renderSortIcon("url")}
@@ -398,7 +373,7 @@ export function HttpRequestsTable({
 					</button>
 					<button
 						type="button"
-						className="col-span-3 text-left transition-colors flex items-center gap-1"
+						className="col-span-2 text-left transition-colors flex items-center gap-1"
 						onClick={() => handleSort("duration")}
 					>
 						Duration {renderSortIcon("duration")}
@@ -407,78 +382,27 @@ export function HttpRequestsTable({
 			</div>
 
 			{/* Table Body */}
-			<div
-				ref={tableRef}
-				style={{ height: virtualScrolling ? `${VIEWPORT_HEIGHT}px` : "auto" }}
-				onScroll={virtualScrolling ? handleScroll : undefined}
-			>
-				{virtualScrolling && (
-					<div style={{ height: `${processedData.length * ITEM_HEIGHT}px` }} />
-				)}
-				<div
-					className={virtualScrolling ? "absolute top-0 left-0 right-0" : ""}
-					style={
-						virtualScrolling
-							? {
-									transform: `translateY(${Math.floor(scrollTop / ITEM_HEIGHT) * ITEM_HEIGHT}px)`,
-								}
-							: {}
-					}
-				>
-					{visibleItems.map((request) => (
-						// biome-ignore lint/a11y/noStaticElementInteractions: easier to manage styling with div instead of button
-						// biome-ignore lint/a11y/useKeyWithClickEvents: covered by onKeyDown at table level
-						<div
-							key={request.id}
-							className={cn(
-								"border-b border-gray-700 px-4 py-3 cursor-pointer transition-colors focus:outline-none",
-								selectedRowId === request.id
-									? "bg-primary/10 border-primary/50"
-									: "",
-							)}
-							onClick={(e) => handleRowClick(request, e)}
-							// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
-							tabIndex={0}
-							style={{
-								...(virtualScrolling ? { height: `${ITEM_HEIGHT}px` } : {}),
-							}}
-						>
-							<div className="grid grid-cols-12 gap-4 items-center text-sm">
-								{request.method || request.status ? (
-									<>
-										<div
-											className="col-span-5 text-primary truncate"
-											style={{
-												paddingLeft: `${request.level * 12}px`,
-											}}
-											title={request.url}
-										>
-											{request.isGrouped &&
-												request.children &&
-												request.children.length > 0 && (
-													<button
-														type="button"
-														className="mr-2 text-primary hover:text-primary/80"
-														onClick={(e) => {
-															e.stopPropagation();
-															if (request.groupId) {
-																handleGroupToggle(request.groupId);
-															}
-														}}
-													>
-														{groupState[request.groupId || ""] ? "�" : "�"}
-													</button>
-												)}
-											{truncateUrl(request.url)}
-										</div>
-										<div className="col-span-2 font-medium">
-											{request.method}
-										</div>
-										<div className="col-span-2">{request.status}</div>
-									</>
-								) : (
+			<div ref={tableRef}>
+				{processedData.map((request) => (
+					// biome-ignore lint/a11y/noStaticElementInteractions: easier to manage styling with div instead of button
+					// biome-ignore lint/a11y/useKeyWithClickEvents: covered by onKeyDown at table level
+					<div
+						key={request.id}
+						className={cn(
+							"border-b border-gray-700 px-4 py-3 cursor-pointer transition-colors focus:outline-none",
+							selectedRowId === request.id
+								? "bg-primary/10 border-primary/50"
+								: "",
+						)}
+						onClick={(e) => handleRowClick(request, e)}
+						// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
+						tabIndex={0}
+					>
+						<div className="grid grid-cols-12 gap-4 items-center text-sm">
+							{request.method || request.status ? (
+								<>
 									<div
-										className="col-span-9 text-primary truncate"
+										className="col-span-6 text-primary truncate"
 										style={{
 											paddingLeft: `${request.level * 12}px`,
 										}}
@@ -502,16 +426,44 @@ export function HttpRequestsTable({
 											)}
 										{truncateUrl(request.url)}
 									</div>
-								)}
-								<div className="col-span-3 text-primary font-mono">
-									{typeof request.duration === "number"
-										? formatDuration(request.duration)
-										: "-"}
+									<div className="col-span-2 font-medium">{request.method}</div>
+									<div className="col-span-2">{request.status}</div>
+								</>
+							) : (
+								<div
+									className="col-span-10 text-primary truncate"
+									style={{
+										paddingLeft: `${request.level * 12}px`,
+									}}
+									title={request.url}
+								>
+									{request.isGrouped &&
+										request.children &&
+										request.children.length > 0 && (
+											<button
+												type="button"
+												className="mr-2 text-primary hover:text-primary/80"
+												onClick={(e) => {
+													e.stopPropagation();
+													if (request.groupId) {
+														handleGroupToggle(request.groupId);
+													}
+												}}
+											>
+												{groupState[request.groupId || ""] ? "�" : "�"}
+											</button>
+										)}
+									{truncateUrl(request.url)}
 								</div>
+							)}
+							<div className="col-span-2 text-primary font-mono">
+								{typeof request.duration === "number"
+									? formatDuration(request.duration)
+									: "-"}
 							</div>
 						</div>
-					))}
-				</div>
+					</div>
+				))}
 			</div>
 		</div>
 	);
