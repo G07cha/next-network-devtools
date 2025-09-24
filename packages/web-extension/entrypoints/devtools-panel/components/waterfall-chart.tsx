@@ -94,7 +94,7 @@ export function WaterfallChart({
 		() => Math.ceil(Math.max(...data.map((d) => d.end))),
 		[data],
 	);
-	const timeRange = 10 ** `${maxTime - minTime}`.length;
+	const timeRange = Math.ceil((maxTime - minTime) / 1000) * 1000;
 
 	const positionedData = useMemo(() => {
 		if (!data.length) return [];
