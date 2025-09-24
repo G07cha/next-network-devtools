@@ -113,19 +113,23 @@ export default function App() {
 					>
 						Clear All
 					</button>
-					<select
-						className="border p-2 border-gray-300 rounded"
-						name="Span filter"
-						onChange={(event) =>
-							setSpanFilter(event.currentTarget.value as SpanFilter)
-						}
-					>
-						{Object.values(SpanFilter).map((value) => (
-							<option value={value} selected={spanFilter === value} key={value}>
-								{value}
-							</option>
-						))}
-					</select>
+					<label className="flex gap-2 items-center">
+						View:
+						<select
+							className="border p-2 border-gray-300 rounded hover:bg-gray-50"
+							name="Span filter"
+							onChange={(event) =>
+								setSpanFilter(event.currentTarget.value as SpanFilter)
+							}
+							value={spanFilter}
+						>
+							{Object.values(SpanFilter).map((value) => (
+								<option value={value} key={value}>
+									{value}
+								</option>
+							))}
+						</select>
+					</label>
 				</div>
 
 				<ConnectionBanner status={wsStatus} />
