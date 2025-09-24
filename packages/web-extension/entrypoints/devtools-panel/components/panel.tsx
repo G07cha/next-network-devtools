@@ -383,6 +383,39 @@ function ServerSpanTab({
 	);
 }
 
+function Tab({
+	onClick,
+	isActive,
+	id,
+	children,
+}: {
+	onClick: () => void;
+	isActive?: boolean;
+	id: string;
+	children: ReactNode;
+}) {
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			className={`
+									flex-1 py-3 px-4 text-sm font-medium transition-colors cursor-pointer
+									focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset
+									${
+										isActive
+											? "text-primary border-b-2 border-primary"
+											: "text-gray-400 hover:text-gray-300"
+									}
+								`}
+			role="tab"
+			aria-selected={isActive}
+			aria-controls={id}
+		>
+			{children}
+		</button>
+	);
+}
+
 export default function SidePanel({
 	requestData,
 	responseData,
@@ -468,10 +501,6 @@ export default function SidePanel({
 				document.removeEventListener("mousedown", handleClickOutside);
 		}
 	}, [isOpen, onClose]);
-
-	const handleTabChange = (tab: TabType) => {
-		setActiveTab(tab);
-	};
 
 	// Resize functionality
 	const handleMouseDown = useCallback((event: React.MouseEvent) => {
@@ -562,76 +591,41 @@ export default function SidePanel({
 					<button
 						type="button"
 						onClick={onClose}
-						className="p-2 hover:text-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer text-gray-400"
+						className="p-2 hover:text-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer text-gray-400"
 						aria-label="Close panel"
 						title="Close panel"
 					>
 						<CloseIcon className="w-5 h-5" />
 					</button>
 					{serverSpanData && (
-						<button
-							type="button"
-							onClick={() => handleTabChange("server-span")}
-							className={`
-									flex-1 py-3 px-4 text-sm font-medium transition-colors
-									focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
-									${
-										activeTab === "server-span"
-											? "text-primary border-b-2 border-primary bg-gray-800/50"
-											: "text-gray-400 hover:text-gray-300 :bg-gray-800/30"
-									}
-								`}
-							role="tab"
-							aria-selected={activeTab === "server-span"}
-							aria-controls="server-span-panel"
+						<Tab
+							onClick={() => setActiveTab("server-span")}
+							isActive={activeTab === "server-span"}
+							id="server-span-panel"
 						>
 							Server Span
-						</button>
+						</Tab>
 					)}
-					<button
-						type="button"
-						onClick={() => handleTabChange("request")}
-						className={`
-								flex-1 py-3 px-4 text-sm font-medium transition-colors
-								focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
-								${
-									activeTab === "request"
-										? "text-primary border-b-2 border-primary bg-gray-800/50"
-										: "text-gray-400 not-disabled:hover:text-gray-300 not-disabled:hover:bg-gray-800/30"
-								}
-							`}
-						role="tab"
-						aria-selected={activeTab === "request"}
-						aria-controls="request-panel"
-						disabled={!requestData}
+					<Tab
+						onClick={() => setActiveTab("request")}
+						isActive={activeTab === "request"}
+						id="request-panel"
 					>
 						Request
 						{!requestData && (
 							<span className="ml-1 text-xs text-gray-500">(N/A)</span>
 						)}
-					</button>
-					<button
-						type="button"
-						onClick={() => handleTabChange("response")}
-						className={`
-								flex-1 py-3 px-4 text-sm font-medium transition-colors
-								focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset
-								${
-									activeTab === "response"
-										? "text-primary border-b-2 border-primary bg-gray-800/50"
-										: "text-gray-400 not-disabled:hover:text-gray-300 not-disabled:hover:bg-gray-800/30"
-								}
-							`}
-						role="tab"
-						aria-selected={activeTab === "response"}
-						aria-controls="response-panel"
-						disabled={!responseData}
+					</Tab>
+					<Tab
+						onClick={() => setActiveTab("response")}
+						isActive={activeTab === "response"}
+						id="response-panel"
 					>
 						Response
 						{!responseData && (
 							<span className="ml-1 text-xs text-gray-500">(N/A)</span>
 						)}
-					</button>
+					</Tab>
 				</div>
 
 				{/* Tab Content */}
