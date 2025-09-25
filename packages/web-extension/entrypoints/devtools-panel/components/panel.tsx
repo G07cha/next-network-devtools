@@ -480,24 +480,6 @@ export default function SidePanel({
 		}
 	}, [isOpen, onClose]);
 
-	// Outside click handler
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				panelRef.current &&
-				!panelRef.current.contains(event.target as Node)
-			) {
-				onClose();
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener("mousedown", handleClickOutside);
-			return () =>
-				document.removeEventListener("mousedown", handleClickOutside);
-		}
-	}, [isOpen, onClose]);
-
 	// Resize functionality
 	const handleMouseDown = useCallback((event: React.MouseEvent) => {
 		event.preventDefault();
