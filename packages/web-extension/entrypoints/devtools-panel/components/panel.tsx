@@ -240,14 +240,12 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 					<div className="flex justify-between">
 						<span className="text-gray-400">Content-Type:</span>
-						<span className="text-gray-300 font-mono">{contentType}</span>
+						<span className="font-mono">{contentType}</span>
 					</div>
 					{contentLength && (
 						<div className="flex justify-between">
 							<span className="text-gray-400">Content-Length:</span>
-							<span className="text-gray-300 font-mono">
-								{contentLength} bytes
-							</span>
+							<span className="font-mono">{contentLength} bytes</span>
 						</div>
 					)}
 				</div>
@@ -269,21 +267,19 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 					{responseTime && (
 						<div className="flex justify-between">
 							<span className="text-gray-400">Response Time:</span>
-							<span className="font-mono text-gray-300">
-								{formatDuration(responseTime)}
-							</span>
+							<span className="font-mono">{formatDuration(responseTime)}</span>
 						</div>
 					)}
 					<div className="flex justify-between">
 						<span className="text-gray-400">Start Time:</span>
-						<span className="font-mono text-gray-300">
+						<span className="font-mono">
 							{new Date(responseData.start).toLocaleString()}
 						</span>
 					</div>
 					{responseData.end && (
 						<div className="flex justify-between">
 							<span className="text-gray-400">End Time:</span>
-							<span className="font-mono text-gray-300">
+							<span className="font-mono">
 								{new Date(responseData.end).toLocaleString()}
 							</span>
 						</div>
