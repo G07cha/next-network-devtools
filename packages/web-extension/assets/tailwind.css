@@ -98,8 +98,8 @@
 	/* Neutral Colors */
 	--color-neutral: #9ca3af;
 	--color-neutral-light: #cbd5e1;
-	--color-neutral-bg: rgb(156 163 175 / 0.1);
-	--color-neutral-bg-hover: rgb(156 163 175 / 0.2);
+	--color-neutral-bg: var(--color-gray-100);
+	--color-neutral-bg-hover: var(--color-gray-200);
 	--color-neutral-border: rgb(156 163 175 / 0.3);
 
 	/* ===== INTERACTIVE COLORS ===== */

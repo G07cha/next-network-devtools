@@ -296,8 +296,8 @@ export function HttpRequestsTable({
 			<div
 				key={request.id}
 				className={cn(
-					"border-b border-gray-700 px-4 py-3 cursor-pointer transition-colors focus:outline-none",
-					selectedRowId === request.id ? "bg-primary/10 border-primary/50" : "",
+					"border-b border-border-primary px-4 py-3 cursor-pointer transition-colors text-primary focus:outline-none",
+					selectedRowId === request.id ? "bg-primary/10" : "hover:bg-gray-50",
 				)}
 				onClick={(e) => handleRowClick(request, e)}
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
@@ -307,7 +307,7 @@ export function HttpRequestsTable({
 					{request.method || request.status ? (
 						<>
 							<div
-								className="col-span-6 text-primary truncate"
+								className="col-span-6 truncate"
 								style={{
 									paddingLeft: `${level * 12}px`,
 								}}
@@ -316,7 +316,7 @@ export function HttpRequestsTable({
 								{request.children && request.children.length > 0 && (
 									<button
 										type="button"
-										className="mr-2 text-primary hover:text-primary/80"
+										className="mr-2 hover:text-secondary"
 										onClick={(e) => {
 											e.stopPropagation();
 											handleGroupToggle(request.id);
@@ -332,7 +332,7 @@ export function HttpRequestsTable({
 						</>
 					) : (
 						<div
-							className="col-span-10 text-primary truncate"
+							className="col-span-10 truncate"
 							style={{
 								paddingLeft: `${level * 12}px`,
 							}}
@@ -341,7 +341,7 @@ export function HttpRequestsTable({
 							{request.children && request.children.length > 0 && (
 								<button
 									type="button"
-									className="mr-2 text-primary hover:text-primary/80"
+									className="mr-2 hover:text-secondary"
 									onClick={(e) => {
 										e.stopPropagation();
 										handleGroupToggle(request.id);
@@ -353,7 +353,7 @@ export function HttpRequestsTable({
 							{truncateUrl(request.url)}
 						</div>
 					)}
-					<div className="col-span-2 text-primary font-mono">
+					<div className="col-span-2 font-mono">
 						{typeof request.duration === "number"
 							? formatDuration(request.duration)
 							: "-"}
@@ -368,7 +368,7 @@ export function HttpRequestsTable({
 
 	if (loading) {
 		return (
-			<div className="flex h-full items-center justify-center text-tertiary border-t-2 border-primary">
+			<div className="flex h-full items-center justify-center text-tertiary">
 				<div className="text-center">
 					<div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
 					<div>Loading requests...</div>
@@ -379,7 +379,7 @@ export function HttpRequestsTable({
 
 	if (data.length === 0) {
 		return (
-			<div className="flex h-full items-center justify-center text-tertiary border-t-2 border-primary">
+			<div className="flex h-full items-center justify-center text-tertiary">
 				<div className="text-center">
 					<div className="text-lg font-semibold mb-1">No requests</div>
 					<div className="text-sm">
@@ -393,16 +393,13 @@ export function HttpRequestsTable({
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: regular table just ain't going to cut it here with virtual scrolling
 		<div
-			className={cn(
-				"border-t-2 h-full border-primary overflow-auto",
-				className,
-			)}
+			className={cn("h-full overflow-auto", className)}
 			onKeyDown={handleKeyDown}
 			role="table"
 			aria-label="HTTP Requests Table"
 		>
 			{/* Table Header */}
-			<div className="border-b border-primary px-4 py-3 sticky top-0 bg-white">
+			<div className="border-b border-border-primary px-4 py-3 sticky top-0 bg-neutral-bg">
 				<div className="grid grid-cols-12 gap-4 text-sm font-medium text-secondary">
 					<button
 						type="button"
