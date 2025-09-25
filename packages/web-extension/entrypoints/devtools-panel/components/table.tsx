@@ -1,8 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
 import type { SpanTree } from "~/utils/spans";
+import { truncate } from "~/utils/string";
 import { cn } from "~/utils/style";
 import { formatDuration } from "~/utils/time";
+import { isTruthy } from "~/utils/type";
 
 type SpanNode = {
 	// Server span data (from span-start/span-end events)
@@ -32,10 +34,7 @@ export interface HttpRequestData {
 	timestamp: number;
 	request?: RequestSpan;
 	response?: ResponseSpan;
-	level: number;
-	isGrouped: boolean;
-	groupId?: string;
-	children?: HttpRequestData[];
+	children: HttpRequestData[];
 }
 
 export type SortColumn = "status" | "method" | "url" | "duration";
@@ -44,7 +43,6 @@ export type SortDirection = "asc" | "desc";
 export interface TableProps {
 	data: HttpRequestData[];
 	loading?: boolean;
-	error?: string;
 	onRowClick?: (request: HttpRequestData) => void;
 	className?: string;
 }
@@ -61,13 +59,10 @@ interface GroupState {
 export function transformSpanTreeToTableData(
 	spanTree: SpanTree,
 ): HttpRequestData[] {
-	const result: HttpRequestData[] = [];
-
 	function processNode(
 		node: SpanNode,
-		level: number = 0,
 		parentId?: string,
-	): void {
+	): HttpRequestData | undefined {
 		// Process server spans as organizational units
 		if (node.isServerSpan && node.serverSpan) {
 			// Extract span attributes for better display
@@ -92,21 +87,17 @@ export function transformSpanTreeToTableData(
 				duration,
 				timestamp: startTime,
 				request: undefined, // Server spans don't have request data
-				response: undefined,
-				level,
-				isGrouped: node.children.length > 0,
-				groupId: node.children.length > 0 ? node.spanId : undefined,
+				response: undefined, // Server spans don't have response data
 				children: [],
 			};
 
-			result.push(serverSpanData);
-
 			// Process child nodes (requests/responses or nested server spans) under this server span
 			if (node.children.length > 0) {
-				node.children.forEach((child) => {
-					processNode(child, level + 1, node.spanId);
-				});
+				serverSpanData.children = node.children
+					.map((child) => processNode(child, node.spanId))
+					.filter(isTruthy);
 			}
+			return serverSpanData;
 		}
 		// Process regular request/response nodes
 		else if (node.request) {
@@ -129,29 +120,20 @@ export function transformSpanTreeToTableData(
 				timestamp: requestStart,
 				request: node.request,
 				response: node.response,
-				level,
-				isGrouped: node.children.length > 0,
-				groupId: node.children.length > 0 ? requestId : undefined,
 				children: [],
 			};
 
-			result.push(requestData);
-
 			// Process child nodes (nested requests or server spans)
 			if (node.children.length > 0) {
-				node.children.forEach((child) => {
-					processNode(child, level + 1, requestId);
-				});
+				requestData.children = node.children
+					.map((child) => processNode(child, requestId))
+					.filter(isTruthy);
 			}
+
+			return requestData;
 		}
-		// Handle nodes that might have children but no direct request data
-		else if (node.children.length > 0) {
-			// Process orphaned children - this handles edge cases where hierarchy exists
-			// but the parent node doesn't have complete data
-			node.children.forEach((child) => {
-				processNode(child, level, parentId);
-			});
-		}
+
+		return undefined;
 	}
 
 	// Find root nodes (nodes without parents or with parents not in the current tree)
@@ -161,16 +143,63 @@ export function transformSpanTreeToTableData(
 	});
 
 	// Process all root nodes - hierarchy is already built by the spans utility
-	rootNodes.forEach((node) => processNode(node));
-
-	// Sort by timestamp to maintain chronological order
-	return result.sort((a, b) => a.timestamp - b.timestamp);
+	return (
+		rootNodes
+			.map((node) => processNode(node))
+			.filter(isTruthy)
+			// Sort by timestamp to maintain chronological order
+			.sort((a, b) => a.timestamp - b.timestamp)
+	);
 }
+
+const sortData = (
+	data: HttpRequestData[],
+	column: SortColumn,
+	direction: SortDirection,
+) =>
+	data
+		.toSorted((a, b) => {
+			let aVal: string | number;
+			let bVal: string | number;
+
+			switch (column) {
+				case "status":
+					aVal = a.status ?? 0;
+					bVal = b.status ?? 0;
+					break;
+				case "method":
+					aVal = a.method;
+					bVal = b.method;
+					break;
+				case "url":
+					aVal = a.url;
+					bVal = b.url;
+					break;
+				case "duration":
+					aVal = a.duration ?? 0;
+					bVal = b.duration ?? 0;
+					break;
+				default:
+					return 0;
+			}
+
+			if (aVal < bVal) return direction === "asc" ? -1 : 1;
+			if (aVal > bVal) return direction === "asc" ? 1 : -1;
+			return 0;
+		})
+		.map(
+			(entry): HttpRequestData => ({
+				...entry,
+				children:
+					entry.children.length > 0
+						? sortData(entry.children, column, direction)
+						: entry.children,
+			}),
+		);
 
 export function HttpRequestsTable({
 	data,
 	loading = false,
-	error,
 	onRowClick,
 	className = "",
 }: TableProps) {
@@ -182,49 +211,9 @@ export function HttpRequestsTable({
 	const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 	const tableRef = useRef<HTMLDivElement>(null);
 
-	const truncateUrl = (url: string, maxLength = 50) => {
-		if (url.length <= maxLength) return url;
-		const start = url.substring(0, maxLength / 2 - 3);
-		const end = url.substring(url.length - maxLength / 2 + 3);
-		return `${start}...${end}`;
-	};
+	const truncateUrl = (url: string) => truncate(url, 50);
 
-	const sortData = useCallback(
-		(data: HttpRequestData[], column: SortColumn, direction: SortDirection) => {
-			return [...data].sort((a, b) => {
-				let aVal: string | number;
-				let bVal: string | number;
-
-				switch (column) {
-					case "status":
-						aVal = a.status ?? 0;
-						bVal = b.status ?? 0;
-						break;
-					case "method":
-						aVal = a.method;
-						bVal = b.method;
-						break;
-					case "url":
-						aVal = a.url;
-						bVal = b.url;
-						break;
-					case "duration":
-						aVal = a.duration ?? 0;
-						bVal = b.duration ?? 0;
-						break;
-					default:
-						return 0;
-				}
-
-				if (aVal < bVal) return direction === "asc" ? -1 : 1;
-				if (aVal > bVal) return direction === "asc" ? 1 : -1;
-				return 0;
-			});
-		},
-		[],
-	);
-
-	const processedData = useMemo(() => {
+	const sortedData = useMemo(() => {
 		let processed = [...data];
 
 		if (sortState.column) {
@@ -232,13 +221,7 @@ export function HttpRequestsTable({
 		}
 
 		return processed;
-		// return processed.filter((item) => {
-		// 	if (item.groupId && !groupState[item.groupId]) {
-		// 		return false;
-		// 	}
-		// 	return true;
-		// });
-	}, [data, sortState, sortData]);
+	}, [data, sortState]);
 
 	const handleSort = (column: SortColumn) => {
 		setSortState((prev) => ({
@@ -264,24 +247,31 @@ export function HttpRequestsTable({
 		onRowClick?.(request);
 	};
 
+	const flatData = useMemo(() => {
+		const flatten = (nodes: HttpRequestData[]): HttpRequestData[] =>
+			nodes.flatMap((node) => [node, ...flatten(node.children)]);
+
+		return flatten(sortedData);
+	}, [sortedData]);
+
 	const handleKeyDown = (event: React.KeyboardEvent) => {
-		const currentIndex = processedData.findIndex(
+		const currentIndex = flatData.findIndex(
 			(item) => item.id === selectedRowId,
 		);
 
 		switch (event.key) {
 			case "ArrowDown":
 				event.preventDefault();
-				if (currentIndex < processedData.length - 1) {
-					setSelectedRowId(processedData[currentIndex + 1].id);
-					onRowClick?.(processedData[currentIndex + 1]);
+				if (currentIndex < flatData.length - 1) {
+					setSelectedRowId(flatData[currentIndex + 1].id);
+					onRowClick?.(flatData[currentIndex + 1]);
 				}
 				break;
 			case "ArrowUp":
 				event.preventDefault();
 				if (currentIndex > 0) {
-					setSelectedRowId(processedData[currentIndex - 1].id);
-					onRowClick?.(processedData[currentIndex - 1]);
+					setSelectedRowId(flatData[currentIndex - 1].id);
+					onRowClick?.(flatData[currentIndex - 1]);
 				}
 				break;
 		}
@@ -299,18 +289,82 @@ export function HttpRequestsTable({
 		);
 	};
 
-	if (error) {
-		return (
-			<div className="flex h-full items-center justify-center text-error border-t-2 border-primary">
-				<div className="text-center">
-					<div className="text-lg font-semibold mb-1">
-						Error loading requests
+	const renderRow = (request: HttpRequestData, level: number = 0) => (
+		<Fragment key={request.id}>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: easier to manage styling with div instead of button */}
+			{/* biome-ignore lint/a11y/useKeyWithClickEvents: covered by onKeyDown at table level */}
+			<div
+				key={request.id}
+				className={cn(
+					"border-b border-gray-700 px-4 py-3 cursor-pointer transition-colors focus:outline-none",
+					selectedRowId === request.id ? "bg-primary/10 border-primary/50" : "",
+				)}
+				onClick={(e) => handleRowClick(request, e)}
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
+				tabIndex={0}
+			>
+				<div className="grid grid-cols-12 gap-4 items-center text-sm">
+					{request.method || request.status ? (
+						<>
+							<div
+								className="col-span-6 text-primary truncate"
+								style={{
+									paddingLeft: `${level * 12}px`,
+								}}
+								title={request.url}
+							>
+								{request.children && request.children.length > 0 && (
+									<button
+										type="button"
+										className="mr-2 text-primary hover:text-primary/80"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleGroupToggle(request.id);
+										}}
+									>
+										{groupState[request.id] ? ">" : "▼"}
+									</button>
+								)}
+								{truncateUrl(request.url)}
+							</div>
+							<div className="col-span-2 font-medium">{request.method}</div>
+							<div className="col-span-2">{request.status}</div>
+						</>
+					) : (
+						<div
+							className="col-span-10 text-primary truncate"
+							style={{
+								paddingLeft: `${level * 12}px`,
+							}}
+							title={request.url}
+						>
+							{request.children && request.children.length > 0 && (
+								<button
+									type="button"
+									className="mr-2 text-primary hover:text-primary/80"
+									onClick={(e) => {
+										e.stopPropagation();
+										handleGroupToggle(request.id);
+									}}
+								>
+									{groupState[request.id] ? ">" : "▼"}
+								</button>
+							)}
+							{truncateUrl(request.url)}
+						</div>
+					)}
+					<div className="col-span-2 text-primary font-mono">
+						{typeof request.duration === "number"
+							? formatDuration(request.duration)
+							: "-"}
 					</div>
-					<div className="text-sm text-secondary">{error}</div>
 				</div>
 			</div>
-		);
-	}
+			{groupState[request.id]
+				? null
+				: request.children?.map((child) => renderRow(child, level + 1))}
+		</Fragment>
+	);
 
 	if (loading) {
 		return (
@@ -383,87 +437,7 @@ export function HttpRequestsTable({
 
 			{/* Table Body */}
 			<div ref={tableRef}>
-				{processedData.map((request) => (
-					// biome-ignore lint/a11y/noStaticElementInteractions: easier to manage styling with div instead of button
-					// biome-ignore lint/a11y/useKeyWithClickEvents: covered by onKeyDown at table level
-					<div
-						key={request.id}
-						className={cn(
-							"border-b border-gray-700 px-4 py-3 cursor-pointer transition-colors focus:outline-none",
-							selectedRowId === request.id
-								? "bg-primary/10 border-primary/50"
-								: "",
-						)}
-						onClick={(e) => handleRowClick(request, e)}
-						// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
-						tabIndex={0}
-					>
-						<div className="grid grid-cols-12 gap-4 items-center text-sm">
-							{request.method || request.status ? (
-								<>
-									<div
-										className="col-span-6 text-primary truncate"
-										style={{
-											paddingLeft: `${request.level * 12}px`,
-										}}
-										title={request.url}
-									>
-										{request.isGrouped &&
-											request.children &&
-											request.children.length > 0 && (
-												<button
-													type="button"
-													className="mr-2 text-primary hover:text-primary/80"
-													onClick={(e) => {
-														e.stopPropagation();
-														if (request.groupId) {
-															handleGroupToggle(request.groupId);
-														}
-													}}
-												>
-													{groupState[request.groupId || ""] ? "�" : "�"}
-												</button>
-											)}
-										{truncateUrl(request.url)}
-									</div>
-									<div className="col-span-2 font-medium">{request.method}</div>
-									<div className="col-span-2">{request.status}</div>
-								</>
-							) : (
-								<div
-									className="col-span-10 text-primary truncate"
-									style={{
-										paddingLeft: `${request.level * 12}px`,
-									}}
-									title={request.url}
-								>
-									{request.isGrouped &&
-										request.children &&
-										request.children.length > 0 && (
-											<button
-												type="button"
-												className="mr-2 text-primary hover:text-primary/80"
-												onClick={(e) => {
-													e.stopPropagation();
-													if (request.groupId) {
-														handleGroupToggle(request.groupId);
-													}
-												}}
-											>
-												{groupState[request.groupId || ""] ? "�" : "�"}
-											</button>
-										)}
-									{truncateUrl(request.url)}
-								</div>
-							)}
-							<div className="col-span-2 text-primary font-mono">
-								{typeof request.duration === "number"
-									? formatDuration(request.duration)
-									: "-"}
-							</div>
-						</div>
-					</div>
-				))}
+				{sortedData.map((request) => renderRow(request))}
 			</div>
 		</div>
 	);

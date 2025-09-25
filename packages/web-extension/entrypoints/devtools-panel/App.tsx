@@ -89,10 +89,6 @@ export default function App() {
 		() => spanNodesToTimingData(filteredSpans),
 		[filteredSpans],
 	);
-	const selectedRequest = useMemo(
-		() => requestData.find((request) => request.id === selectedRequestId),
-		[requestData, selectedRequestId],
-	);
 
 	const selectedSpanNode = selectedRequestId
 		? spans[selectedRequestId]
@@ -135,7 +131,9 @@ export default function App() {
 				<ConnectionBanner status={wsStatus} />
 			</div>
 			<WaterfallChart
-				selectedRequestId={selectedRequest?.id}
+				selectedRequestId={
+					selectedSpanNode?.request?.id ?? selectedSpanNode?.spanId
+				}
 				data={chartData}
 				onSpanClick={handleChartClick}
 			/>
@@ -147,8 +145,8 @@ export default function App() {
 				/>
 
 				<SidePanel
-					requestData={selectedRequest?.request}
-					responseData={selectedRequest?.response}
+					requestData={selectedSpanNode?.request}
+					responseData={selectedSpanNode?.response}
 					serverSpanData={serverSpanData}
 					isOpen={isPanelOpen}
 					onClose={handlePanelClose}
