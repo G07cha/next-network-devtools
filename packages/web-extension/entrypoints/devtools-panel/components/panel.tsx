@@ -395,12 +395,11 @@ function Tab({
 			type="button"
 			onClick={onClick}
 			className={`
-									flex-1 py-3 px-4 text-sm font-medium transition-colors cursor-pointer
-									focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset
+									flex-1 py-3 px-4 text-sm font-medium transition-colors cursor-pointer border-b-2								focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset
 									${
 										isActive
-											? "text-primary border-b-2 border-primary"
-											: "text-gray-400 hover:text-gray-300"
+											? "text-primary border-primary"
+											: "text-gray-400 hover:text-gray-300 border-transparent"
 									}
 								`}
 			role="tab"
