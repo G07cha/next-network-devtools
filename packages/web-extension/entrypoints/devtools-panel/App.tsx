@@ -98,7 +98,7 @@ export default function App() {
 		: undefined;
 
 	return (
-		<div className="flex flex-col h-full overflow-hidden">
+		<div className="flex flex-col h-full overflow-hidden bg-white">
 			<div className="flex items-center justify-between p-3">
 				<div className="flex gap-3">
 					<button
