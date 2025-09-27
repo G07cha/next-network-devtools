@@ -55,35 +55,23 @@ export function sendMessageToTab<T extends ExtensionMessage>(
 export function isDetectionMessage(
 	message: ExtensionMessage,
 ): message is DetectionMessage {
-	return (
-		message?.type === ExtensionMessageType.DETECTION &&
-		typeof message.tabId === "number"
-	);
+	return message?.type === ExtensionMessageType.DETECTION;
 }
 
 export function isDevToolsQueryMessage(
 	message: ExtensionMessage,
 ): message is DevToolsQueryMessage {
-	return (
-		message?.type === ExtensionMessageType.QUERY_STATUS &&
-		typeof message.tabId === "number"
-	);
+	return message?.type === ExtensionMessageType.QUERY_STATUS;
 }
 
 export function isDevToolsResponseMessage(
 	message: ExtensionMessage,
 ): message is DevToolsResponseMessage {
-	return (
-		message?.type === ExtensionMessageType.STATUS_RESPONSE &&
-		typeof message.tabId === "number"
-	);
+	return message?.type === ExtensionMessageType.STATUS_RESPONSE;
 }
 
 export function isTabStatusMessage(
 	message: ExtensionMessage,
 ): message is TabStatusMessage {
-	return (
-		message?.type === ExtensionMessageType.TAB_STATUS_UPDATE &&
-		typeof message.tabId === "number"
-	);
+	return message?.type === ExtensionMessageType.TAB_STATUS_UPDATE;
 }

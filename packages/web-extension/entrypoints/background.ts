@@ -24,7 +24,7 @@ export default defineBackground(() => {
 
 	// Listen for messages from content scripts and devtools
 	browser.runtime.onMessage.addListener(
-		async (message: ExtensionMessage, sender, sendResponse) => {
+		(message: ExtensionMessage, sender, sendResponse) => {
 			console.log("NextNetwork: Background received message", message);
 
 			if (isDetectionMessage(message)) {
