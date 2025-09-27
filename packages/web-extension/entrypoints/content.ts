@@ -6,8 +6,6 @@ import { detectNextjs } from "~/utils/nextjs-detector";
 export default defineContentScript({
 	matches: ["*://localhost/*", "*://127.0.0.1/*"],
 	main() {
-		console.log("NextNetwork: Content script loaded");
-
 		// Perform initial detection when page loads
 		// Wait a bit for the DOM to be fully ready
 		if (document.readyState === "loading") {
@@ -66,10 +64,7 @@ const debouncedDetection = debounce(performDetection, 1000);
 
 async function performDetection() {
 	try {
-		console.log("NextNetwork: Performing Next.js detection");
 		const result = detectNextjs();
-
-		console.log("NextNetwork: Detection result", result);
 
 		// Send result to background script - the background will determine the tab ID
 		try {
@@ -81,7 +76,7 @@ async function performDetection() {
 		} catch (error) {
 			console.error("NextNetwork: Failed to send detection message", error);
 		}
-	} catch (error) {
-		console.error("NextNetwork: Detection failed", error);
+	} catch {
+		// Ignore the error
 	}
 }
