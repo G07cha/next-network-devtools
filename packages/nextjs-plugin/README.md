@@ -1,6 +1,6 @@
 # Next Network extension plugin
 
-A required component to be able to use [Next Network Devtools browser extension](todo link).
+A required component to be able to use [Next Network Devtools browser extension](https://github.com/G07cha/next-network-devtools).
 
 ## Installation
 
