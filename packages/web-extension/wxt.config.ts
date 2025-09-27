@@ -14,4 +14,9 @@ export default defineConfig({
 		},
 	},
 	imports: false,
+	webExt: {
+		startUrls: ["http://localhost:3000"],
+		openDevtools: true,
+		openConsole: true,
+	},
 });
