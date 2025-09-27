@@ -4,7 +4,7 @@ import { ExtensionMessageType, sendMessage } from "~/utils/messaging";
 import { detectNextjs } from "~/utils/nextjs-detector";
 
 export default defineContentScript({
-	matches: ["<all_urls>"],
+	matches: ["*://localhost/*", "*://127.0.0.1/*"],
 	main() {
 		console.log("NextNetwork: Content script loaded");
 
