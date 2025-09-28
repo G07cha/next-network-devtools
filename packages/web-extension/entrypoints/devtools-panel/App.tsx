@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	filterInBetweenSpans,
 	filterServerSpans,
@@ -6,8 +6,9 @@ import {
 	mapServerEventToSpanTree,
 	type SpanTree,
 } from "~/utils/spans";
-import { useWS } from "~/utils/ws";
-import { ConnectionBanner } from "./components/connection-banner";
+import { ConnectionStatus, useWS } from "~/utils/ws";
+import { ConnectionErrorBanner } from "./components/connection-error-banner";
+import { ConnectionIndicator } from "./components/connection-indicator";
 import SidePanel from "./components/panel";
 import HttpRequestsTable, {
 	type HttpRequestData,
@@ -33,7 +34,11 @@ export default function App() {
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
 	const [catchUpReceived, setCatchUpReceived] = useState(false);
 	const [spanFilter, setSpanFilter] = useState(SpanFilter.ROOT_SPANS);
-	const { send, status: wsStatus } = useWS(WS_URL, (event) => {
+	const {
+		send,
+		status: wsStatus,
+		reconnectAttempt,
+	} = useWS(WS_URL, (event) => {
 		if (event.type === "catch-up") {
 			setCatchUpReceived(true);
 		}
@@ -99,6 +104,12 @@ export default function App() {
 
 	return (
 		<div className="flex flex-col h-full overflow-hidden bg-white">
+			{(wsStatus === ConnectionStatus.Error ||
+				(reconnectAttempt > 5 &&
+					(wsStatus === ConnectionStatus.Connecting ||
+						wsStatus === ConnectionStatus.Disconnected))) && (
+				<ConnectionErrorBanner />
+			)}
 			<div className="flex items-center justify-between p-3">
 				<div className="flex gap-3">
 					<button
@@ -128,7 +139,7 @@ export default function App() {
 					</label>
 				</div>
 
-				<ConnectionBanner status={wsStatus} />
+				<ConnectionIndicator status={wsStatus} />
 			</div>
 			<WaterfallChart
 				selectedRequestId={

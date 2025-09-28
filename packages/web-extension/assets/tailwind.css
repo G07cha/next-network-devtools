@@ -7,15 +7,6 @@
 	--color-secondary: #666666;
 	--color-tertiary: #9ca3af;
 
-	--color-success-text: var(--color-primary-inverted);
-	--color-success-bg: #54bc4a;
-	--color-info-text: var(--color-primary-inverted);
-	--color-info-bg: #646cff;
-	--color-warning-text: var(--color-primary-inverted);
-	--color-warning-bg: #f1c40f;
-	--color-error-text: var(--color-primary-inverted);
-	--color-error-bg: #e74c3c;
-
 	--color-border-primary: var(--color-tertiary);
 	--color-border-primary-hover: #6b7280;
 

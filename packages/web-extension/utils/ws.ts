@@ -10,6 +10,7 @@ export enum ConnectionStatus {
 
 export const useWS = (url: string, onMessage: (event: ServerEvent) => void) => {
 	const wsRef = useRef<WebSocket | null>(null);
+	const [reconnectAttempt, setReconnectAttempt] = useState(0);
 	const [status, setStatus] = useState<ConnectionStatus>(
 		ConnectionStatus.Disconnected,
 	);
@@ -24,10 +25,14 @@ export const useWS = (url: string, onMessage: (event: ServerEvent) => void) => {
 
 		function connect() {
 			setStatus(ConnectionStatus.Connecting);
+			setReconnectAttempt((prev) => prev + 1);
 			ws = new window.WebSocket(url);
 			wsRef.current = ws;
 
-			ws.onopen = () => setStatus(ConnectionStatus.Connected);
+			ws.onopen = () => {
+				setStatus(ConnectionStatus.Connected);
+				setReconnectAttempt(0);
+			};
 			ws.onclose = () => {
 				setStatus(ConnectionStatus.Disconnected);
 				reconnectTimer = setTimeout(connect, 2000);
@@ -64,5 +69,6 @@ export const useWS = (url: string, onMessage: (event: ServerEvent) => void) => {
 	return {
 		status,
 		send,
+		reconnectAttempt,
 	};
 };
