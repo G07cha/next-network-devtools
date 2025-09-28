@@ -64,6 +64,9 @@ importers:
 
   packages/web-extension:
     dependencies:
+      '@wxt-dev/storage':
+        specifier: ^1.2.0
+        version: 1.2.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1810,8 +1813,8 @@ packages:
     peerDependencies:
       wxt: '>=0.19.16'
 
-  '@wxt-dev/storage@1.1.1':
-    resolution: {integrity: sha512-H1vYWeoWz03INV4r+sLYDFil88b3rgMMfgGp/EXy3bLbveJeiMiFs/G0bsBN2Ra87Iqlf2oVYRb/ABQpAugbew==}
+  '@wxt-dev/storage@1.2.0':
+    resolution: {integrity: sha512-4A44zCpwl5GZdmUdSJvUWJ6ekZZ+Fz5ttYqTGPIRJSsyosKX8X8Yl7D2Loy1ZlqIg6oJHysaiFXALtTE+pFjpw==}
 
   acorn-import-attributes@1.9.5:
     resolution: {integrity: sha512-n02Vykv5uA3eHGM/Z2dQrcD56kL8TyDb2p1+0P83PClMnC/nc+anbQRhIOWnSq4Ke/KvDPrY3C9hDtC/A3eHnQ==}
@@ -5605,8 +5608,9 @@ snapshots:
       - supports-color
       - vite
 
-  '@wxt-dev/storage@1.1.1':
+  '@wxt-dev/storage@1.2.0':
     dependencies:
+      '@wxt-dev/browser': 0.1.4
       async-mutex: 0.5.0
       dequal: 2.0.3
 
@@ -7742,7 +7746,7 @@ snapshots:
       '@webext-core/isolated-element': 1.1.2
       '@webext-core/match-patterns': 1.0.3
       '@wxt-dev/browser': 0.1.4
-      '@wxt-dev/storage': 1.1.1
+      '@wxt-dev/storage': 1.2.0
       async-mutex: 0.5.0
       c12: 3.2.0(magicast@0.3.5)
       cac: 6.7.14

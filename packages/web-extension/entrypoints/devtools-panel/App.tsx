@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { SpanFilter, useSpanFilter } from "~/utils/span-filter";
 import {
 	filterInBetweenSpans,
 	filterServerSpans,
@@ -20,12 +21,6 @@ import WaterfallChart, {
 
 const WS_URL = "ws://localhost:3300/";
 
-enum SpanFilter {
-	ALL = "All",
-	ROOT_SPANS = "Condensed",
-	REQUESTS_ONLY = "Requests",
-}
-
 export default function App() {
 	const [spans, setSpans] = useState<SpanTree>({});
 	const [selectedRequestId, setSelectedRequestId] = useState<string | null>(
@@ -33,7 +28,7 @@ export default function App() {
 	);
 	const [isPanelOpen, setIsPanelOpen] = useState(false);
 	const [catchUpReceived, setCatchUpReceived] = useState(false);
-	const [spanFilter, setSpanFilter] = useState(SpanFilter.ROOT_SPANS);
+	const [spanFilter, setSpanFilter] = useSpanFilter();
 	const {
 		send,
 		status: wsStatus,
