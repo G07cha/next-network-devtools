@@ -45,6 +45,7 @@ export async function register() {
       register();
     });
   }
+  // If you have production instrumentation, put it in the "else" branch
 }
 ```
 
