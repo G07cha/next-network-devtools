@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState } from "react";
+import { Fragment, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { RequestSpan, ResponseSpan, Span } from "@/packages/types";
 import type { SpanTree } from "~/utils/spans";
 import { truncate } from "~/utils/string";
@@ -210,6 +210,7 @@ export function HttpRequestsTable({
 	const [groupState, setGroupState] = useState<GroupState>({});
 	const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 	const tableRef = useRef<HTMLDivElement>(null);
+	const isScrolledToBottom = useRef(true);
 
 	const truncateUrl = (url: string) => truncate(url, 50);
 
@@ -288,6 +289,26 @@ export function HttpRequestsTable({
 			<span className="text-primary">▼</span>
 		);
 	};
+
+	const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+		const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+		// Check if user is at the bottom of the scroll container
+		const atBottom = scrollTop + clientHeight >= scrollHeight - 1; // 1px buffer to account for rounding
+		isScrolledToBottom.current = atBottom;
+	};
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we only want to run this effect when the data changes
+	useLayoutEffect(() => {
+		// Auto-scroll to bottom when new data is added and user was already at bottom
+		if (tableRef.current && isScrolledToBottom.current) {
+			// Use setTimeout to ensure the DOM has updated with new items
+			setTimeout(() => {
+				if (tableRef.current) {
+					tableRef.current.scrollTop = tableRef.current.scrollHeight;
+				}
+			}, 0);
+		}
+	}, [sortedData]);
 
 	const renderRow = (request: HttpRequestData, level: number = 0) => (
 		<Fragment key={request.id}>
@@ -399,6 +420,8 @@ export function HttpRequestsTable({
 			onKeyDown={handleKeyDown}
 			role="table"
 			aria-label="HTTP Requests Table"
+			ref={tableRef}
+			onScroll={handleScroll}
 		>
 			{/* Table Header */}
 			<div className="border-b border-border-primary px-4 py-3 sticky top-0 bg-neutral-bg">
@@ -439,9 +462,7 @@ export function HttpRequestsTable({
 			</div>
 
 			{/* Table Body */}
-			<div ref={tableRef}>
-				{sortedData.map((request) => renderRow(request))}
-			</div>
+			{sortedData.map((request) => renderRow(request))}
 		</div>
 	);
 }
