@@ -169,7 +169,7 @@ export function WaterfallChart({
 
 	const getStatusColor = (status?: number, method?: string) => {
 		// Special color for server spans
-		if (method === "SERVER") return "bg-blue-500";
+		if (method === "SERVER") return "bg-info";
 		if (!status) return "bg-neutral-bg";
 		if (status >= 200 && status < 300) return "bg-success-bg";
 		if (status >= 300 && status < 400) return "bg-warning-bg";
@@ -237,7 +237,7 @@ export function WaterfallChart({
 								"absolute group cursor-pointer",
 								getStatusColor(item.status, item.method),
 								selectedRequestId && item.id === selectedRequestId
-									? "border border-red-500"
+									? "border border-info"
 									: undefined,
 							)}
 							style={{

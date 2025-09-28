@@ -49,7 +49,10 @@ const PropertyList = ({
 }) => {
 	return (
 		<div
-			className={cn("gap-2 text-sm grid grid-cols-2 text-gray-400", className)}
+			className={cn(
+				"gap-2 text-sm grid grid-cols-2 text-text-tertiary",
+				className,
+			)}
 		>
 			{data.map(({ label, value, valueContainerClassName }) => (
 				<Fragment key={label}>
@@ -75,7 +78,7 @@ function HeadersDisplay({ headers, title }: HeadersDisplayProps) {
 
 	if (headerEntries.length === 0) {
 		return (
-			<Card className="text-gray-400 text-sm italic">
+			<Card className="text-text-tertiary text-sm italic">
 				No {title.toLowerCase()}
 			</Card>
 		);
@@ -115,7 +118,7 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 	const getMethodColor = (method: string) => {
 		switch (method?.toUpperCase()) {
 			case "GET":
-				return "text-blue bg-blue/10";
+				return "text-info bg-info/10";
 			case "POST":
 				return "text-primary bg-primary/10";
 			case "PUT":
@@ -125,13 +128,13 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 			case "PATCH":
 				return "text-warning bg-warning/10";
 			default:
-				return "text-gray-400 bg-gray-400/10";
+				return "text-text-tertiary bg-tertiary/10";
 		}
 	};
 
 	if (!requestData) {
 		return (
-			<div className="flex items-center justify-center h-64 text-gray-400">
+			<div className="flex items-center justify-center h-64 text-text-tertiary">
 				<div className="text-center">
 					<div className="text-lg font-semibold mb-2">No Request Data</div>
 					<div className="text-sm">Request information is not available</div>
@@ -150,7 +153,7 @@ function RequestTab({ requestData }: { requestData?: RequestSpan }) {
 					>
 						{requestData.method}
 					</span>
-					<span className="text-gray-400 text-xs">
+					<span className="text-text-tertiary text-xs">
 						{new Date(requestData.start).toLocaleString()}
 					</span>
 				</div>
@@ -184,7 +187,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 		if (status >= 300 && status < 400) return "text-warning";
 		if (status >= 400 && status < 500) return "text-error";
 		if (status >= 500) return "text-error";
-		return "text-gray-400";
+		return "text-text-tertiary";
 	};
 
 	const getStatusBadgeColor = (status: number) => {
@@ -192,7 +195,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 		if (status >= 300 && status < 400) return "bg-warning/20 text-warning";
 		if (status >= 400 && status < 500) return "bg-error/20 text-error";
 		if (status >= 500) return "bg-error/20 text-error";
-		return "bg-gray-400/20 text-gray-400";
+		return "bg-tertiary/20 text-text-tertiary";
 	};
 
 	const responseTime = useMemo(() => {
@@ -205,7 +208,7 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 
 	if (!responseData) {
 		return (
-			<div className="flex items-center justify-center h-64 text-gray-400">
+			<div className="flex items-center justify-center h-64 text-text-tertiary">
 				<div className="text-center">
 					<div className="text-lg font-semibold mb-2">No Response Data</div>
 					<div className="text-sm">Response information is not available</div>
@@ -232,19 +235,19 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 						</span>
 					</div>
 					{responseTime && (
-						<span className="text-gray-400 text-sm">
+						<span className="text-text-tertiary text-sm">
 							{formatDuration(responseTime)}
 						</span>
 					)}
 				</div>
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 					<div className="flex justify-between">
-						<span className="text-gray-400">Content-Type:</span>
+						<span className="text-text-tertiary">Content-Type:</span>
 						<span className="font-mono">{contentType}</span>
 					</div>
 					{contentLength && (
 						<div className="flex justify-between">
-							<span className="text-gray-400">Content-Length:</span>
+							<span className="text-text-tertiary">Content-Length:</span>
 							<span className="font-mono">{contentLength} bytes</span>
 						</div>
 					)}
@@ -266,19 +269,19 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 				<div className="space-y-2 text-sm">
 					{responseTime && (
 						<div className="flex justify-between">
-							<span className="text-gray-400">Response Time:</span>
+							<span className="text-text-tertiary">Response Time:</span>
 							<span className="font-mono">{formatDuration(responseTime)}</span>
 						</div>
 					)}
 					<div className="flex justify-between">
-						<span className="text-gray-400">Start Time:</span>
+						<span className="text-text-tertiary">Start Time:</span>
 						<span className="font-mono">
 							{new Date(responseData.start).toLocaleString()}
 						</span>
 					</div>
 					{responseData.end && (
 						<div className="flex justify-between">
-							<span className="text-gray-400">End Time:</span>
+							<span className="text-text-tertiary">End Time:</span>
 							<span className="font-mono">
 								{new Date(responseData.end).toLocaleString()}
 							</span>
@@ -297,7 +300,7 @@ function ServerSpanTab({
 }) {
 	if (!serverSpanData) {
 		return (
-			<div className="flex items-center justify-center h-64 text-gray-400">
+			<div className="flex items-center justify-center h-64 text-text-tertiary">
 				<div className="text-center">
 					<div className="text-lg font-semibold mb-2">No Server Span Data</div>
 					<div className="text-sm">
@@ -329,7 +332,7 @@ function ServerSpanTab({
 						{serverSpanData.isActive ? "ACTIVE" : "COMPLETED"}
 					</span>
 					{duration && (
-						<span className="text-gray-400 text-sm">
+						<span className="text-text-tertiary text-sm">
 							{formatDuration(duration)}
 						</span>
 					)}
@@ -399,7 +402,7 @@ function Tab({
 									${
 										isActive
 											? "text-primary border-primary"
-											: "text-gray-400 hover:text-gray-300 border-transparent"
+											: "text-text-tertiary hover:text-gray-300 border-transparent"
 									}
 								`}
 			role="tab"
@@ -536,7 +539,7 @@ export default function SidePanel({
 			ref={panelRef}
 			className={`
 					absolute right-0 top-0 bottom-0 left-auto inset-0 z-50 items-stretch justify-end
-					bg-white border-l border-gray-600 shadow-2xl
+					bg-container-primary border-l border-border-primary shadow-2xl
 					h-full overflow-hidden flex max-w-11/12 min-w-60
 					transform transition-transform duration-300 ease-in-out
 					${isOpen ? "translate-x-0" : "translate-x-full"}
@@ -564,11 +567,11 @@ export default function SidePanel({
 			{/* Panel Content */}
 			<div className="flex-1 flex flex-col min-w-0">
 				{/* Tab Navigation */}
-				<div className="flex border-b border-gray-600">
+				<div className="flex border-b border-border-primary">
 					<button
 						type="button"
 						onClick={onClose}
-						className="p-2 hover:text-gray-700 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer text-gray-400"
+						className="p-2 hover:text-text-secondary rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer text-text-tertiary"
 						aria-label="Close panel"
 						title="Close panel"
 					>
@@ -590,7 +593,7 @@ export default function SidePanel({
 					>
 						Request
 						{!requestData && (
-							<span className="ml-1 text-xs text-gray-500">(N/A)</span>
+							<span className="ml-1 text-xs text-text-tertiary">(N/A)</span>
 						)}
 					</Tab>
 					<Tab
@@ -600,7 +603,7 @@ export default function SidePanel({
 					>
 						Response
 						{!responseData && (
-							<span className="ml-1 text-xs text-gray-500">(N/A)</span>
+							<span className="ml-1 text-xs text-text-tertiary">(N/A)</span>
 						)}
 					</Tab>
 				</div>

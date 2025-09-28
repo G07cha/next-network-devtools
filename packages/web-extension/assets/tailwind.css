@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-	/* Abstract colors */
 	--color-primary: #000000;
-	--color-primary-inverted: #ffffff;
 	--color-secondary: #666666;
 	--color-tertiary: #9ca3af;
 
@@ -17,44 +15,21 @@
 	/* Tertiary Borders - Subtle borders, light separators */
 	--color-border-tertiary: var(--color-tertiary);
 	--color-border-tertiary-hover: #374151;
-	/* Component colors */
-
-	/* 
-   * Next Network Design System
-   * Three-tier semantic color system organized by context and hierarchy
-   */
-
-	/* ===== TEXT COLORS ===== */
 
 	/* Primary Text - Main content, headers, important elements */
-	--color-text-primary: #ffffff;
-	--color-text-primary-hover: #f8f9fa;
+	--color-text-primary: #242424;
 
 	/* Secondary Text - Supporting content, labels, descriptions */
-	--color-text-secondary: #d1d5db; /* gray-300 */
-	--color-text-secondary-hover: #e5e7eb;
+	--color-text-secondary: #d1d5db;
 
 	/* Tertiary Text - Subtle content, placeholders, disabled states */
-	--color-text-tertiary: #9ca3af; /* gray-400 */
-	--color-text-tertiary-hover: #6b7280;
+	--color-text-tertiary: #9ca3af;
 
 	/* ===== CONTAINER COLORS ===== */
 
 	/* Primary Containers - Main panels, cards, primary backgrounds */
-	--color-container-primary: #242424; /* dark */
-	--color-container-primary-hover: #2d2d2d;
-
-	/* Secondary Containers - Secondary panels, nested containers */
-	--color-container-secondary: #222222; /* panel */
-	--color-container-secondary-hover: #2a2a2a;
-
-	/* Tertiary Containers - Subtle backgrounds, overlays, code blocks */
-	--color-container-tertiary: #181818; /* code */
-	--color-container-tertiary-hover: #1f1f1f;
-
-	/* ===== BORDER COLORS ===== */
-
-	/* Primary Borders - Main borders, dividers, strong emphasis */
+	--color-container-primary: #ffffff;
+	--color-container-primary-hover: #f8f9fa;
 
 	/* ===== STATUS COLORS ===== */
 
@@ -92,53 +67,6 @@
 	--color-neutral-bg: var(--color-gray-100);
 	--color-neutral-bg-hover: var(--color-gray-200);
 	--color-neutral-border: rgb(156 163 175 / 0.3);
-
-	/* ===== INTERACTIVE COLORS ===== */
-
-	/* Button Colors */
-	--color-button-primary: #1a1a1a;
-	--color-button-primary-hover: #2d2d2d;
-	--color-button-secondary: #374151;
-	--color-button-secondary-hover: #4b5563;
-
-	/* Surface Colors for different hierarchy levels */
-	--color-surface-elevated: #2d2d2d;
-	--color-surface-elevated-hover: #3a3a3a;
-
-	/* ===== UTILITY OVERRIDES ===== */
-
-	/* Override existing custom colors to use semantic tokens */
-	--color-blue: var(--color-info);
-	--color-dark: var(--color-container-primary);
-	--color-panel: var(--color-container-secondary);
-	--color-code: var(--color-container-tertiary);
-	--color-button: var(--color-button-primary);
-}
-
-/* Custom utility classes for semantic color usage */
-@layer utilities {
-	/* Interactive States */
-	.bg-button-primary {
-		background-color: var(--color-button-primary);
-	}
-	.bg-button-secondary {
-		background-color: var(--color-button-secondary);
-	}
-
-	.hover\:bg-button-primary:hover {
-		background-color: var(--color-button-primary-hover);
-	}
-	.hover\:bg-button-secondary:hover {
-		background-color: var(--color-button-secondary-hover);
-	}
-
-	/* Surface Utilities */
-	.bg-surface-elevated {
-		background-color: var(--color-surface-elevated);
-	}
-	.hover\:bg-surface-elevated:hover {
-		background-color: var(--color-surface-elevated-hover);
-	}
 }
 
 @layer base {

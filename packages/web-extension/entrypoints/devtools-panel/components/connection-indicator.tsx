@@ -34,7 +34,7 @@ export function ConnectionIndicator({ status }: { status: ConnectionStatus }) {
 
 	return (
 		<div className="flex items-center relative group">
-			<span className="absolute right-6 w-max bg-white text-dark px-2.5 py-1 rounded-lg text-sm font-medium shadow-lg z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+			<span className="absolute right-6 w-max bg-container-primary text-text-primary px-2.5 py-1 rounded-lg text-sm font-medium shadow-lg z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
 				{statusText}
 			</span>
 			<button

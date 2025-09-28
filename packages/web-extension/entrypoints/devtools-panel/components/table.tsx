@@ -297,7 +297,9 @@ export function HttpRequestsTable({
 				key={request.id}
 				className={cn(
 					"border-b border-border-primary px-4 py-3 cursor-pointer transition-colors text-primary focus:outline-none",
-					selectedRowId === request.id ? "bg-primary/10" : "hover:bg-gray-50",
+					selectedRowId === request.id
+						? "bg-primary/10"
+						: "hover:bg-container-primary-hover",
 				)}
 				onClick={(e) => handleRowClick(request, e)}
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: the element is interactive
@@ -322,7 +324,7 @@ export function HttpRequestsTable({
 											handleGroupToggle(request.id);
 										}}
 									>
-										{groupState[request.id] ? ">" : "▼"}
+										{groupState[request.id] ? "▶" : "▼"}
 									</button>
 								)}
 								{truncateUrl(request.url)}
@@ -347,7 +349,7 @@ export function HttpRequestsTable({
 										handleGroupToggle(request.id);
 									}}
 								>
-									{groupState[request.id] ? ">" : "▼"}
+									{groupState[request.id] ? "▶" : "▼"}
 								</button>
 							)}
 							{truncateUrl(request.url)}

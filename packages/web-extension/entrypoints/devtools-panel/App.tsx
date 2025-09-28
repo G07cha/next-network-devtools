@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
 	filterInBetweenSpans,
 	filterServerSpans,
@@ -103,7 +103,7 @@ export default function App() {
 		: undefined;
 
 	return (
-		<div className="flex flex-col h-full overflow-hidden bg-white">
+		<div className="flex flex-col h-full overflow-hidden bg-container-primary">
 			{(wsStatus === ConnectionStatus.Error ||
 				(reconnectAttempt > 5 &&
 					(wsStatus === ConnectionStatus.Connecting ||
@@ -115,7 +115,7 @@ export default function App() {
 					<button
 						type="button"
 						onClick={handleClearData}
-						className="px-4 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+						className="px-4 py-1 text-xs font-medium border border-border-primary rounded hover:bg-container-primary-hover bg-container-primary"
 						title="Clear all recorded requests and spans"
 					>
 						Clear All
@@ -123,7 +123,7 @@ export default function App() {
 					<label className="flex gap-2 items-center">
 						View:
 						<select
-							className="border p-2 border-gray-300 rounded hover:bg-gray-50"
+							className="border p-2 border-border-primary rounded hover:bg-container-primary-hover bg-container-primary text-primary"
 							name="Span filter"
 							onChange={(event) =>
 								setSpanFilter(event.currentTarget.value as SpanFilter)
