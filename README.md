@@ -6,9 +6,7 @@
 
 Next Network is a browser extension that allows to track server-side network activity resulting from client-side requests for Next.js (v14+) applications.
 
-<p align="center">
-  <img src="./.github/assets/demo.jpg" alt="Next Network extension screenshot" width="60%"/>
-</p>
+![Next Network browser extension screenshot](./.github/assets/screenshot.png)
 
 ## How It Works
 
