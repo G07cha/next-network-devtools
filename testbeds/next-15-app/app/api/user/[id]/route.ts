@@ -8,9 +8,13 @@ const users: User[] = [
 	{ id: 3, name: "Bob Johnson" },
 ];
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(
+	_: Request,
+	{ params }: { params: Promise<{ id: string }> },
+) {
 	try {
-		const userId = parseInt(params.id);
+		const { id } = await params;
+		const userId = parseInt(id);
 
 		if (Number.isNaN(userId)) {
 			return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });

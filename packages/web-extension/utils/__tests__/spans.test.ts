@@ -8,6 +8,7 @@ import type {
 import {
 	filterInBetweenSpans,
 	filterServerSpans,
+	filterSpansByUrl,
 	filterSpansWithoutChildren,
 	mapServerEventToSpanTree,
 	type SpanNode,
@@ -786,7 +787,7 @@ describe("filterEmptySpans", () => {
 	});
 });
 
-describe("filterInBetweenChildren", () => {
+describe("filterInBetweenSpans", () => {
 	it("should remove the in-between nodes and return top spans with bottommost children", () => {
 		const rootSpan = createMockSpan({ spanId: "root", id: "root" });
 
@@ -806,13 +807,13 @@ describe("filterInBetweenChildren", () => {
 		// Request within child span
 		const request = createMockRequest({
 			id: "api-call",
-			spanId: "child",
+			spanId: childSpan.spanId,
 		});
 
 		// Response for the request
 		const response = createMockResponse({
 			id: "api-call",
-			spanId: "child",
+			spanId: childSpan.spanId,
 		});
 
 		let result = mapServerEventToSpanTree(
@@ -850,9 +851,13 @@ describe("filterInBetweenChildren", () => {
 
 		const filteredTree = filterInBetweenSpans(result);
 
-		// Checking if root's child is now the child span
+		expect(filteredTree[rootSpan.id].children.length).toBe(1);
 		expect(filteredTree[rootSpan.id].children[0].spanId).toEqual(childSpan.id);
+		expect(filteredTree[rootSpan.id].children[0].parentSpanId).toEqual(
+			rootSpan.id,
+		);
 		expect(filteredTree[rootSpan.id].children[0].children.length).toBe(0);
+		expect(filteredTree[inBetweenSpan.id]).toBeUndefined();
 	});
 });
 
@@ -908,5 +913,411 @@ describe("filterServerSpans", () => {
 		expect(filteredTree[rootSpan.id]).toBeUndefined();
 		expect(filteredTree[childSpan.id]).toBeUndefined();
 		expect(filteredTree[request.id]).not.toBeUndefined();
+	});
+});
+
+describe("filterSpansByUrl", () => {
+	it("returns the original tree when no filter is provided", () => {
+		const request = createMockRequest({ url: "https://api.example.com/users" });
+		const spanTree: SpanTree = {
+			"req-1": {
+				spanId: "req-1",
+				isServerSpan: false,
+				children: [],
+				request,
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "");
+		expect(result).toEqual(spanTree);
+	});
+
+	it("filters spans by exact URL match (case-insensitive)", () => {
+		const request1 = createMockRequest({
+			url: "https://api.example.com/users",
+		});
+		const request2 = createMockRequest({
+			url: "https://api.example.com/posts",
+		});
+		const spanTree: SpanTree = {
+			"req-1": {
+				spanId: "req-1",
+				isServerSpan: false,
+				children: [],
+				request: request1,
+			},
+			"req-2": {
+				spanId: "req-2",
+				isServerSpan: false,
+				children: [],
+				request: request2,
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "users");
+		expect(Object.keys(result)).toHaveLength(1);
+		expect(result["req-1"]).toBeDefined();
+		expect(result["req-2"]).toBeUndefined();
+	});
+
+	it("filters spans by partial URL match (case-insensitive)", () => {
+		const request1 = createMockRequest({
+			url: "https://api.example.com/users",
+		});
+		const request2 = createMockRequest({
+			url: "https://api.example.com/posts",
+		});
+		const request3 = createMockRequest({
+			url: "https://api.example.com/users/profile",
+		});
+		const spanTree: SpanTree = {
+			"req-1": {
+				spanId: "req-1",
+				isServerSpan: false,
+				children: [],
+				request: request1,
+			},
+			"req-2": {
+				spanId: "req-2",
+				isServerSpan: false,
+				children: [],
+				request: request2,
+			},
+			"req-3": {
+				spanId: "req-3",
+				isServerSpan: false,
+				children: [],
+				request: request3,
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "user");
+		expect(Object.keys(result)).toHaveLength(2);
+		expect(result["req-1"]).toBeDefined();
+		expect(result["req-3"]).toBeDefined();
+		expect(result["req-2"]).toBeUndefined();
+	});
+
+	it("preserves parent-child relationships when filtering", () => {
+		const rootSpan = createMockSpan({ spanId: "root", id: "root" });
+		const childSpan = createMockSpan({
+			spanId: "child",
+			id: "child",
+			parentSpan: { spanId: "root", traceId: "trace-1" },
+		});
+		const request = createMockRequest({
+			id: "req-1",
+			url: "https://api.example.com/users",
+			spanId: "child",
+		});
+
+		// Build the span tree manually to match the expected structure
+		const spanTree: SpanTree = {
+			root: {
+				spanId: "root",
+				parentSpanId: undefined,
+				isServerSpan: true,
+				serverSpan: { start: rootSpan, isActive: true },
+				children: [
+					{
+						spanId: "child",
+						parentSpanId: "root",
+						isServerSpan: true,
+						serverSpan: { start: childSpan, isActive: true },
+						children: [
+							{
+								spanId: "child",
+								parentSpanId: "root",
+								isServerSpan: false,
+								request,
+								children: [],
+							},
+						],
+					},
+				],
+			},
+			child: {
+				spanId: "child",
+				parentSpanId: "root",
+				isServerSpan: true,
+				serverSpan: { start: childSpan, isActive: true },
+				children: [
+					{
+						spanId: "child",
+						parentSpanId: "root",
+						isServerSpan: false,
+						request,
+						children: [],
+					},
+				],
+			},
+			"req-1": {
+				spanId: "child",
+				parentSpanId: "root",
+				isServerSpan: false,
+				request,
+				children: [],
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "users");
+		expect(Object.keys(result)).toHaveLength(3); // Should include root, child, and request
+		expect(result["root"]).toBeDefined();
+		expect(result["child"]).toBeDefined();
+		expect(result["req-1"]).toBeDefined();
+	});
+
+	it("returns empty tree when no matches found", () => {
+		const request = createMockRequest({ url: "https://api.example.com/users" });
+		const spanTree: SpanTree = {
+			"req-1": {
+				spanId: "req-1",
+				isServerSpan: false,
+				children: [],
+				request,
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "nonexistent");
+		expect(Object.keys(result)).toHaveLength(0);
+	});
+
+	it("handles case-insensitive matching", () => {
+		const request = createMockRequest({ url: "https://api.Example.com/USERS" });
+		const spanTree: SpanTree = {
+			"req-1": {
+				spanId: "req-1",
+				isServerSpan: false,
+				children: [],
+				request,
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "users");
+		expect(Object.keys(result)).toHaveLength(1);
+		expect(result["req-1"]).toBeDefined();
+	});
+
+	it("filters by multiple URL fragments", () => {
+		const request1 = createMockRequest({
+			url: "https://api.example.com/users",
+		});
+		const request2 = createMockRequest({
+			url: "https://api.example.com/posts",
+		});
+		const request3 = createMockRequest({
+			url: "https://api.example.com/users/profile",
+		});
+		const spanTree: SpanTree = {
+			"req-1": {
+				spanId: "req-1",
+				isServerSpan: false,
+				children: [],
+				request: request1,
+			},
+			"req-2": {
+				spanId: "req-2",
+				isServerSpan: false,
+				children: [],
+				request: request2,
+			},
+			"req-3": {
+				spanId: "req-3",
+				isServerSpan: false,
+				children: [],
+				request: request3,
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "api.example.com");
+		expect(Object.keys(result)).toHaveLength(3);
+		expect(result["req-1"]).toBeDefined();
+		expect(result["req-2"]).toBeDefined();
+		expect(result["req-3"]).toBeDefined();
+	});
+
+	it("preserves nested structure with multiple matching children", () => {
+		const rootSpan = createMockSpan({ spanId: "root", id: "root" });
+		const request1 = createMockRequest({
+			id: "req-1",
+			url: "https://api.example.com/users",
+			spanId: "root",
+		});
+		const request2 = createMockRequest({
+			id: "req-2",
+			url: "https://api.example.com/users/profile",
+			spanId: "root",
+		});
+		const request3 = createMockRequest({
+			id: "req-3",
+			url: "https://api.example.com/posts",
+			spanId: "root",
+		});
+
+		const spanTree: SpanTree = {
+			root: {
+				spanId: "root",
+				parentSpanId: undefined,
+				isServerSpan: true,
+				serverSpan: { start: rootSpan, isActive: true },
+				children: [
+					{
+						spanId: "root",
+						parentSpanId: undefined,
+						isServerSpan: false,
+						request: request1,
+						children: [],
+					},
+					{
+						spanId: "root",
+						parentSpanId: undefined,
+						isServerSpan: false,
+						request: request2,
+						children: [],
+					},
+					{
+						spanId: "root",
+						parentSpanId: undefined,
+						isServerSpan: false,
+						request: request3,
+						children: [],
+					},
+				],
+			},
+			"req-1": {
+				spanId: "root",
+				parentSpanId: undefined,
+				isServerSpan: false,
+				request: request1,
+				children: [],
+			},
+			"req-2": {
+				spanId: "root",
+				parentSpanId: undefined,
+				isServerSpan: false,
+				request: request2,
+				children: [],
+			},
+			"req-3": {
+				spanId: "root",
+				parentSpanId: undefined,
+				isServerSpan: false,
+				request: request3,
+				children: [],
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "users");
+		expect(Object.keys(result)).toHaveLength(3); // root, req-1, req-2
+		expect(result["root"]).toBeDefined();
+		expect(result["req-1"]).toBeDefined();
+		expect(result["req-2"]).toBeDefined();
+		expect(result["req-3"]).toBeUndefined(); // Should not be included as it doesn't match
+	});
+
+	it("handles server spans with matching requests", () => {
+		const serverSpan = createMockSpan({ spanId: "server", id: "server" });
+		const request = createMockRequest({
+			id: "req-1",
+			url: "https://api.example.com/users",
+			spanId: "server",
+		});
+
+		const spanTree: SpanTree = {
+			server: {
+				spanId: "server",
+				isServerSpan: true,
+				serverSpan: { start: serverSpan, isActive: true },
+				children: [
+					{
+						spanId: "server",
+						isServerSpan: false,
+						request,
+						children: [],
+					},
+				],
+				parentSpanId: undefined,
+			},
+			"req-1": {
+				spanId: "server",
+				isServerSpan: false,
+				request,
+				children: [],
+				parentSpanId: "server",
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "users");
+		expect(Object.keys(result)).toHaveLength(2); // server and req-1
+		expect(result["server"]).toBeDefined();
+		expect(result["req-1"]).toBeDefined();
+	});
+
+	it("preserves parent spans when child request matches", () => {
+		const rootSpan = createMockSpan({ spanId: "root", id: "root" });
+		const childSpan = createMockSpan({
+			spanId: "child",
+			id: "child",
+			parentSpan: { spanId: "root", traceId: "trace-1" },
+		});
+		const request = createMockRequest({
+			id: "req-1",
+			url: "https://api.example.com/users",
+			spanId: "child",
+		});
+
+		const spanTree: SpanTree = {
+			root: {
+				spanId: "root",
+				isServerSpan: true,
+				serverSpan: { start: rootSpan, isActive: true },
+				children: [
+					{
+						spanId: "child",
+						parentSpanId: "root",
+						isServerSpan: true,
+						serverSpan: { start: childSpan, isActive: true },
+						children: [
+							{
+								spanId: "child",
+								parentSpanId: "root",
+								isServerSpan: false,
+								request,
+								children: [],
+							},
+						],
+					},
+				],
+				parentSpanId: undefined,
+			},
+			child: {
+				spanId: "child",
+				parentSpanId: "root",
+				isServerSpan: true,
+				serverSpan: { start: childSpan, isActive: true },
+				children: [
+					{
+						spanId: "child",
+						parentSpanId: "root",
+						isServerSpan: false,
+						request,
+						children: [],
+					},
+				],
+			},
+			"req-1": {
+				spanId: "child",
+				parentSpanId: "root",
+				isServerSpan: false,
+				request,
+				children: [],
+			},
+		};
+
+		const result = filterSpansByUrl(spanTree, "users");
+		expect(Object.keys(result)).toHaveLength(3); // root, child, and req-1
+		expect(result["root"]).toBeDefined();
+		expect(result["child"]).toBeDefined();
+		expect(result["req-1"]).toBeDefined();
 	});
 });

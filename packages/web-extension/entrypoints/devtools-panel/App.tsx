@@ -3,6 +3,7 @@ import { SpanFilter, useSpanFilter } from "~/utils/span-filter";
 import {
 	filterInBetweenSpans,
 	filterServerSpans,
+	filterSpansByUrl,
 	filterSpansWithoutChildren,
 	mapServerEventToSpanTree,
 	type SpanTree,
@@ -70,16 +71,30 @@ export default function App() {
 		setIsPanelOpen(false);
 	};
 
+	const [urlFilter, setUrlFilter] = useState("");
+
 	const filteredSpans = useMemo(() => {
+		// First apply the span filter
+		let resultSpans = spans;
 		switch (spanFilter) {
 			case SpanFilter.ALL:
-				return spans;
+				resultSpans = spans;
+				break;
 			case SpanFilter.ROOT_SPANS:
-				return filterInBetweenSpans(filterSpansWithoutChildren(spans));
+				resultSpans = filterInBetweenSpans(filterSpansWithoutChildren(spans));
+				break;
 			case SpanFilter.REQUESTS_ONLY:
-				return filterServerSpans(spans);
+				resultSpans = filterServerSpans(spans);
+				break;
 		}
-	}, [spans, spanFilter]);
+
+		// Then apply URL filter if provided
+		if (urlFilter.trim()) {
+			return filterSpansByUrl(resultSpans, urlFilter.trim());
+		}
+
+		return resultSpans;
+	}, [spans, spanFilter, urlFilter]);
 
 	const requestData = useMemo(
 		() => transformSpanTreeToTableData(filteredSpans),
@@ -135,6 +150,15 @@ export default function App() {
 				</div>
 
 				<ConnectionIndicator status={wsStatus} />
+			</div>
+			<div className="px-3 pb-2">
+				<input
+					type="text"
+					placeholder="Filter by URL..."
+					value={urlFilter}
+					onChange={(e) => setUrlFilter(e.target.value)}
+					className="w-full px-3 py-2 border border-border-primary rounded bg-container-primary text-primary focus:outline-none focus:ring-1 focus:ring-info"
+				/>
 			</div>
 			<WaterfallChart
 				selectedRequestId={
