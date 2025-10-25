@@ -9,6 +9,7 @@ import {
 	type SpanTree,
 } from "~/utils/spans";
 import { ConnectionStatus, useWS } from "~/utils/ws";
+import { CollapsibleSection } from "./components/collapsible-section";
 import { ConnectionErrorBanner } from "./components/connection-error-banner";
 import { ConnectionIndicator } from "./components/connection-indicator";
 import SidePanel from "./components/panel";
@@ -160,13 +161,15 @@ export default function App() {
 					className="w-full px-3 py-2 border border-border-primary rounded bg-container-primary text-primary focus:outline-none focus:ring-1 focus:ring-info"
 				/>
 			</div>
-			<WaterfallChart
-				selectedRequestId={
-					selectedSpanNode?.request?.id ?? selectedSpanNode?.spanId
-				}
-				data={chartData}
-				onSpanClick={handleChartClick}
-			/>
+			<CollapsibleSection title="Timeline">
+				<WaterfallChart
+					selectedRequestId={
+						selectedSpanNode?.request?.id ?? selectedSpanNode?.spanId
+					}
+					data={chartData}
+					onSpanClick={handleChartClick}
+				/>
+			</CollapsibleSection>
 			<div className="relative flex-1 overflow-hidden">
 				<HttpRequestsTable
 					data={requestData}

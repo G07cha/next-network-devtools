@@ -1,26 +1,27 @@
 import { useState } from "react";
-import { Card } from "./card";
 
 interface CollapsibleSectionProps {
 	title: string;
 	children: React.ReactNode;
 	defaultExpanded?: boolean;
 	badge?: string | number;
+	className?: string;
 }
 
 export function CollapsibleSection({
 	title,
 	children,
 	defaultExpanded = true,
+	className,
 }: CollapsibleSectionProps) {
 	const [expanded, setExpanded] = useState(defaultExpanded);
 
 	return (
-		<div className="mb-4">
+		<div className={className}>
 			<button
 				type="button"
 				onClick={() => setExpanded(!expanded)}
-				className="flex items-center justify-between w-full p-3 rounded-lg transition-colors"
+				className="flex items-center justify-between w-full rounded-lg transition-colors p-1"
 				aria-expanded={expanded}
 			>
 				<div className="flex items-center gap-2">
@@ -30,7 +31,7 @@ export function CollapsibleSection({
 					<span className="font-medium text-sm">{title}</span>
 				</div>
 			</button>
-			{expanded && <Card className="mt-2">{children}</Card>}
+			{expanded && children}
 		</div>
 	);
 }

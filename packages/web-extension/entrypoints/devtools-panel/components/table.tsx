@@ -424,7 +424,7 @@ export function HttpRequestsTable({
 			onScroll={handleScroll}
 		>
 			{/* Table Header */}
-			<div className="border-b border-border-primary px-4 py-3 sticky top-0 bg-neutral-bg">
+			<div className="border-y border-border-primary px-4 py-3 sticky top-0 bg-neutral-bg">
 				<div
 					className="grid grid-cols-12 gap-4 text-sm font-medium text-secondary 
 						border-b-2 border-transparent"

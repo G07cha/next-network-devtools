@@ -192,7 +192,7 @@ export function WaterfallChart({
 	// Calculate time labels for the axis
 	return (
 		<div
-			className="w-full border-y border-y-border-primary overflow-hidden"
+			className="w-full border-t border-y-border-primary overflow-hidden"
 			style={{ minHeight: `${chartHeight}px` }}
 		>
 			{/* Chart Container */}
@@ -210,7 +210,7 @@ export function WaterfallChart({
 				</div>
 
 				{/* Time axis */}
-				<div className="h-8 bg-neutral-bg border-b border-secondary-border flex items-center">
+				<div className="h-8 bg-neutral-bg text-secondary border-b border-secondary-border flex items-center">
 					{Array.from({ length: 11 }, (_, i) => {
 						const timePoint = (timeRange * i) / 10;
 						return (

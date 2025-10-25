@@ -266,28 +266,32 @@ function ResponseTab({ responseData }: { responseData?: ResponseSpan }) {
 			)}
 
 			<CollapsibleSection title="Timing" defaultExpanded={false}>
-				<div className="space-y-2 text-sm">
-					{responseTime && (
+				<Card>
+					<div className="space-y-2 text-sm">
+						{responseTime && (
+							<div className="flex justify-between">
+								<span className="text-text-tertiary">Response Time:</span>
+								<span className="font-mono">
+									{formatDuration(responseTime)}
+								</span>
+							</div>
+						)}
 						<div className="flex justify-between">
-							<span className="text-text-tertiary">Response Time:</span>
-							<span className="font-mono">{formatDuration(responseTime)}</span>
-						</div>
-					)}
-					<div className="flex justify-between">
-						<span className="text-text-tertiary">Start Time:</span>
-						<span className="font-mono">
-							{new Date(responseData.start).toLocaleString()}
-						</span>
-					</div>
-					{responseData.end && (
-						<div className="flex justify-between">
-							<span className="text-text-tertiary">End Time:</span>
+							<span className="text-text-tertiary">Start Time:</span>
 							<span className="font-mono">
-								{new Date(responseData.end).toLocaleString()}
+								{new Date(responseData.start).toLocaleString()}
 							</span>
 						</div>
-					)}
-				</div>
+						{responseData.end && (
+							<div className="flex justify-between">
+								<span className="text-text-tertiary">End Time:</span>
+								<span className="font-mono">
+									{new Date(responseData.end).toLocaleString()}
+								</span>
+							</div>
+						)}
+					</div>
+				</Card>
 			</CollapsibleSection>
 		</div>
 	);
@@ -344,39 +348,41 @@ function ServerSpanTab({
 
 			{/* Timing Information */}
 			<CollapsibleSection title="Timing Information" defaultExpanded={true}>
-				<PropertyList
-					data={[
-						...(serverSpanData.start
-							? [
-									{
-										label: "Start Time:",
-										value: new Date(
-											serverSpanData.start.start,
-										).toLocaleString(),
-										valueContainerClassName: "break-all",
-									},
-								]
-							: []),
-						...(typeof serverSpanData.end?.end === "number"
-							? [
-									{
-										label: "End Time:",
-										value: new Date(serverSpanData.end.end).toLocaleString(),
-										valueContainerClassName: "break-all",
-									},
-								]
-							: []),
-						...(duration
-							? [
-									{
-										label: "Duration:",
-										value: formatDuration(duration),
-										valueContainerClassName: "break-all",
-									},
-								]
-							: []),
-					]}
-				/>
+				<Card>
+					<PropertyList
+						data={[
+							...(serverSpanData.start
+								? [
+										{
+											label: "Start Time:",
+											value: new Date(
+												serverSpanData.start.start,
+											).toLocaleString(),
+											valueContainerClassName: "break-all",
+										},
+									]
+								: []),
+							...(typeof serverSpanData.end?.end === "number"
+								? [
+										{
+											label: "End Time:",
+											value: new Date(serverSpanData.end.end).toLocaleString(),
+											valueContainerClassName: "break-all",
+										},
+									]
+								: []),
+							...(duration
+								? [
+										{
+											label: "Duration:",
+											value: formatDuration(duration),
+											valueContainerClassName: "break-all",
+										},
+									]
+								: []),
+						]}
+					/>
+				</Card>
 			</CollapsibleSection>
 		</div>
 	);
