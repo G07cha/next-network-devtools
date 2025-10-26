@@ -1,74 +1,5 @@
 @import "tailwindcss";
 
-@theme {
-	--color-primary: #000000;
-	--color-secondary: #666666;
-	--color-tertiary: #9ca3af;
-
-	--color-border-primary: var(--color-tertiary);
-	--color-border-primary-hover: #6b7280;
-
-	/* Secondary Borders - Supporting borders, separators */
-	--color-border-secondary: var(--color-secondary);
-	--color-border-secondary-hover: #4b5563;
-
-	/* Tertiary Borders - Subtle borders, light separators */
-	--color-border-tertiary: var(--color-tertiary);
-	--color-border-tertiary-hover: #374151;
-
-	/* Primary Text - Main content, headers, important elements */
-	--color-text-primary: #242424;
-
-	/* Secondary Text - Supporting content, labels, descriptions */
-	--color-text-secondary: #d1d5db;
-
-	/* Tertiary Text - Subtle content, placeholders, disabled states */
-	--color-text-tertiary: #9ca3af;
-
-	/* ===== CONTAINER COLORS ===== */
-
-	/* Primary Containers - Main panels, cards, primary backgrounds */
-	--color-container-primary: #ffffff;
-	--color-container-primary-hover: #f8f9fa;
-
-	/* ===== STATUS COLORS ===== */
-
-	/* Success Colors */
-	--color-success: #54bc4a;
-	--color-success-light: #68cc5c;
-	--color-success-bg: rgb(84 188 74 / 0.8);
-	--color-success-bg-hover: rgb(84 188 74);
-	--color-success-border: rgb(84 188 74 / 0.3);
-
-	/* Info Colors */
-	--color-info: #646cff;
-	--color-info-light: #7c84ff;
-	--color-info-bg: rgb(100 108 255 / 0.1);
-	--color-info-bg-hover: rgb(100 108 255 / 0.2);
-	--color-info-border: rgb(100 108 255 / 0.3);
-
-	/* Warning Colors */
-	--color-warning: #f1c40f;
-	--color-warning-light: #f4d03f;
-	--color-warning-bg: rgb(241 196 15 / 0.1);
-	--color-warning-bg-hover: rgb(241 196 15 / 0.2);
-	--color-warning-border: rgb(241 196 15 / 0.3);
-
-	/* Error Colors */
-	--color-error: #e74c3c;
-	--color-error-light: #ec7063;
-	--color-error-bg: rgb(231 76 60 / 0.1);
-	--color-error-bg-hover: rgb(231 76 60 / 0.2);
-	--color-error-border: rgb(231 76 60 / 0.3);
-
-	/* Neutral Colors */
-	--color-neutral: #9ca3af;
-	--color-neutral-light: #cbd5e1;
-	--color-neutral-bg: var(--color-gray-100);
-	--color-neutral-bg-hover: var(--color-gray-200);
-	--color-neutral-border: rgb(156 163 175 / 0.3);
-}
-
 @layer base {
 	html,
 	body {
@@ -77,7 +8,186 @@
 		padding: 0;
 	}
 
-	#root {
+	:root {
 		height: 100%;
 	}
+
+	:root {
+		/* Light theme */
+		--primary: #000000;
+		--secondary: #666666;
+		--tertiary: #9ca3af;
+
+		--border-primary: var(--color-tertiary);
+		--border-primary-hover: #6b7280;
+
+		/* Secondary Borders - Supporting borders, separators */
+		--border-secondary: var(--color-secondary);
+		--border-secondary-hover: #4b5563;
+
+		/* Tertiary Borders - Subtle borders, light separators */
+		--border-tertiary: var(--color-tertiary);
+		--border-tertiary-hover: #374151;
+
+		/* Primary Text - Main content, headers, important elements */
+		--text-primary: #242424;
+
+		/* Secondary Text - Supporting content, labels, descriptions */
+		--text-secondary: #d1d5db;
+
+		/* Tertiary Text - Subtle content, placeholders, disabled states */
+		--text-tertiary: #9ca3af;
+
+		/* ===== CONTAINER COLORS ===== */
+
+		/* Primary Containers - Main panels, cards, primary backgrounds */
+		--container-primary: #ffffff;
+		--container-primary-hover: #f8f9fa;
+
+		/* ===== STATUS COLORS ===== */
+
+		/* Success Colors */
+		--success: #54bc4a;
+		--success-light: #68cc5c;
+		--success-bg: rgb(84 188 74 / 0.8);
+		--success-bg-hover: rgb(84 188 74);
+		--success-border: rgb(84 188 74 / 0.3);
+
+		/* Info Colors */
+		--info: #646cff;
+		--info-light: #7c84ff;
+		--info-bg: rgb(100 108 255 / 0.1);
+		--info-bg-hover: rgb(100 108 255 / 0.2);
+		--info-border: rgb(100 108 255 / 0.3);
+
+		/* Warning Colors */
+		--warning: #f1c40f;
+		--warning-light: #f4d03f;
+		--warning-bg: rgb(241 196 15 / 0.1);
+		--warning-bg-hover: rgb(241 196 15 / 0.2);
+		--warning-border: rgb(241 196 15 / 0.3);
+
+		/* Error Colors */
+		--error: #e74c3c;
+		--error-light: #ec7063;
+		--error-bg: rgb(231 76 60 / 0.1);
+		--error-bg-hover: rgb(231 76 60 / 0.2);
+		--error-border: rgb(231 76 60 / 0.3);
+
+		/* Neutral Colors */
+		--neutral: #9ca3af;
+		--neutral-light: #cbd5e1;
+		--neutral-bg: var(--color-gray-100);
+		--neutral-bg-hover: var(--color-gray-200);
+		--neutral-border: rgb(156 163 175 / 0.3);
+
+		/* Dark theme */
+		@media (prefers-color-scheme: dark) {
+			--primary: #ffffff;
+			--secondary: #a0a0a0;
+			--tertiary: #6b7280;
+
+			--border-primary: #374151;
+			--border-primary-hover: #4b5563;
+
+			/* Secondary Borders - Supporting borders, separators */
+			--border-secondary: #4b5563;
+			--border-secondary-hover: #6b7280;
+
+			/* Tertiary Borders - Subtle borders, light separators */
+			--border-tertiary: #4b5563;
+			--border-tertiary-hover: #6b7280;
+
+			/* Primary Text - Main content, headers, important elements */
+			--text-primary: #e5e5e5;
+
+			/* Secondary Text - Supporting content, labels, descriptions */
+			--text-secondary: #a0a0a0;
+
+			/* Tertiary Text - Subtle content, placeholders, disabled states */
+			--text-tertiary: #6b7280;
+
+			/* ===== CONTAINER COLORS ===== */
+
+			/* Primary Containers - Main panels, cards, primary backgrounds */
+			--container-primary: #1a1a1a;
+			--container-primary-hover: #2a2a2a;
+
+			/* Neutral Colors */
+			--neutral: #6b7280;
+			--neutral-light: #9ca3af;
+			--neutral-bg: #374151;
+			--neutral-bg-hover: #4b5563;
+			--neutral-border: rgb(107 114 128 / 0.3);
+		}
+	}
+}
+
+@theme {
+	--color-primary: var(--primary);
+	--color-secondary: var(--secondary);
+	--color-tertiary: var(--tertiary);
+
+	--color-border-primary: var(--color-tertiary);
+	--color-border-primary-hover: var(--border-primary-hover);
+
+	/* Secondary Borders - Supporting borders, separators */
+	--color-border-secondary: var(--color-secondary);
+	--color-border-secondary-hover: var(--border-secondary-hover);
+
+	/* Tertiary Borders - Subtle borders, light separators */
+	--color-border-tertiary: var(--color-tertiary);
+	--color-border-tertiary-hover: var(--border-tertiary-hover);
+
+	/* Primary Text - Main content, headers, important elements */
+	--color-text-primary: var(--text-primary);
+
+	/* Secondary Text - Supporting content, labels, descriptions */
+	--color-text-secondary: var(--text-secondary);
+
+	/* Tertiary Text - Subtle content, placeholders, disabled states */
+	--color-text-tertiary: var(--text-tertiary);
+
+	/* ===== CONTAINER COLORS ===== */
+
+	/* Primary Containers - Main panels, cards, primary backgrounds */
+	--color-container-primary: var(--container-primary);
+	--color-container-primary-hover: var(--container-primary-hover);
+
+	/* ===== STATUS COLORS ===== */
+
+	/* Success Colors */
+	--color-success: var(--success);
+	--color-success-light: var(--success-light);
+	--color-success-bg: var(--success-bg);
+	--color-success-bg-hover: var(--success-bg-hover);
+	--color-success-border: var(--success-border);
+
+	/* Info Colors */
+	--color-info: var(--info);
+	--color-info-light: var(--info-light);
+	--color-info-bg: var(--info-bg);
+	--color-info-bg-hover: var(--info-bg-hover);
+	--color-info-border: var(--info-border);
+
+	/* Warning Colors */
+	--color-warning: var(--warning);
+	--color-warning-light: var(--warning-light);
+	--color-warning-bg: var(--warning-bg);
+	--color-warning-bg-hover: var(--warning-bg-hover);
+	--color-warning-border: var(--warning-border);
+
+	/* Error Colors */
+	--color-error: var(--error);
+	--color-error-light: var(--error-light);
+	--color-error-bg: var(--error-bg);
+	--color-error-bg-hover: var(--error-bg-hover);
+	--color-error-border: var(--error-border);
+
+	/* Neutral Colors */
+	--color-neutral: var(--neutral);
+	--color-neutral-light: var(--neutral-light);
+	--color-neutral-bg: var(--neutral-bg);
+	--color-neutral-bg-hover: var(--neutral-bg-hover);
+	--color-neutral-border: var(--neutral-border);
 }

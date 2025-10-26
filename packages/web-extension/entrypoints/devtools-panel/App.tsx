@@ -114,7 +114,7 @@ export default function App() {
 		: undefined;
 
 	return (
-		<div className="flex flex-col h-full overflow-hidden bg-container-primary">
+		<div className="flex flex-col h-full overflow-hidden bg-container-primary text-primary">
 			{(wsStatus === ConnectionStatus.Error ||
 				(reconnectAttempt > 5 &&
 					(wsStatus === ConnectionStatus.Connecting ||
@@ -134,7 +134,7 @@ export default function App() {
 					<label className="flex gap-2 items-center">
 						View:
 						<select
-							className="border p-2 border-border-primary rounded hover:bg-container-primary-hover bg-container-primary text-primary"
+							className="border p-2 border-border-primary rounded hover:bg-container-primary-hover bg-container-primary"
 							name="Span filter"
 							onChange={(event) =>
 								setSpanFilter(event.currentTarget.value as SpanFilter)
