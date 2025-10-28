@@ -1,6 +1,6 @@
 {
 	"name": "next-network-devtools-plugin",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Next.js instrumentation plugin for end-to-end network tracking and monitoring",
 	"keywords": [
 		"nextjs",

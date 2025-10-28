@@ -4,8 +4,10 @@ export async function register() {
 		process.env.NEXT_RUNTIME === "nodejs" &&
 		process.env.NODE_ENV === "development"
 	) {
-		await import("next-network-devtools-plugin").then(({ register }) => {
-			register();
-		});
+		await import("next-network-devtools-plugin").then(
+			({ registerNextNetwork }) => {
+				registerNextNetwork();
+			},
+		);
 	}
 }

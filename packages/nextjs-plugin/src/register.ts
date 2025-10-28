@@ -26,3 +26,6 @@ function startLocalServer() {
 		console.log("NextNetwork: Plugin server running on http://localhost:3300");
 	});
 }
+
+// Alias to not clash with `register` parent function in instrumentation.ts
+export const registerNextNetwork = register;

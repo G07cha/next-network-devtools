@@ -39,8 +39,8 @@ Create or update your `instrumentation.(js|ts)` file in your Next.js project roo
 ```typescript
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs" && process.env.NODE_ENV === "development") {
-    await import("next-network-devtools-plugin").then(({ register }) => {
-      register();
+    await import("next-network-devtools-plugin").then(({ registerNextNetwork }) => {
+      registerNextNetwork();
     });
   }
   // If you have production instrumentation, put it in the "else" branch
